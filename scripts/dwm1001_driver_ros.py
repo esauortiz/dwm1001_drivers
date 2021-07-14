@@ -20,11 +20,8 @@ class ReadyToLocalize(object):
 
     def __init__(self) :
         """
-        Initialize the node, open serial port
+        Initialize serial port
         """
-
-        # Init node
-        rospy.init_node('DWM1001_Active_{}'.format(random.randint(0,100000)), anonymous=False)
 
         # Get port and tag name
         self.dwm_port = rospy.get_param('~port')
