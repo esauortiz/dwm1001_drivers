@@ -27,6 +27,10 @@ catkin_package(
   DEPENDS
 )
 
+catkin_install_python(PROGRAMS scripts/dwm1001_drivers.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 ###########
 ## Build ##
 ###########
@@ -34,3 +38,4 @@ catkin_package(
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
+

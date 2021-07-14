@@ -1,7 +1,5 @@
 <launch>
-
-    <node name="dwm1001_node" pkg="dwm1001_drivers" type="dwm1001_driver_ros" respawn="true" output="screen">
+    <node name="dwm1001_node" pkg="dwm1001_drivers" type="dwm1001_driver_ros.py" output="screen">
         <rosparam file="$(find dwm1001_drivers)/config/params.yaml" command="load"/>
     </node>
-
 </launch>
