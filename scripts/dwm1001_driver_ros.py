@@ -7,6 +7,8 @@
 import os, sys
 import rospy, time, serial, random
 from std_msgs.msg import Header
+from std_msgs.msg       import Float64
+from sensor_msgs.msg import Imu
 from geometry_msgs.msg import *
 from uwb_msgs.msg import AnchorInfo
 
@@ -18,24 +20,36 @@ from dwm1001_apiCommands import DWM1001_API_COMMANDS
 class ReadyToLocalize(object):
 
 
-    def __init__(self) :
+    def __init__(self, anchors, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm=None, dimension=None, height=1000):
         """
         Initialize serial port
         """
+        self.anchors = anchors
+        self.algorithm = algorithm
+        self.dimension = dimension
+        self.height = height
+        self.range_error_counts = [0 for i in range(len(self.anchors))]
+        self.world_frame_id = world_frame_id
+        self.tag_frame_id = tag_frame_id
+        self.tag_device_id = tag_device_id
+        self.do_ranging_attempts = do_ranging_attempts
 
         # Get port and tag name
-        self.dwm_port = rospy.get_param('~port')
-        self.tag_name = rospy.get_param('~tag_name')
+        self.dwm_port = rospy.get_param('~serial_port')
         self.use_network = rospy.get_param('~use_network', False)
         self.network = rospy.get_param('~network', "default")
         self.verbose = rospy.get_param('~verbose', False)
-        
-        # Set a ROS rate
-        self.rate = rospy.Rate(1)
-        
+
         # Empty dictionary to store topics being published
         self.topics = {}
         
+    def initSerial(self):
+        """
+        Initialize port and dwm1001 api
+        :param:
+        :returns: none
+        """
+
         # Serial port settings
         self.serialPortDWM1001 = serial.Serial(
             port = self.dwm_port,
@@ -45,12 +59,6 @@ class ReadyToLocalize(object):
             bytesize = serial.SEVENBITS
         )
 
-    def initSerial(self):
-        """
-        Initialize port and dwm1001 api
-        :param:
-        :returns: none
-        """
         # close the serial port in case the previous run didn't closed it properly
         self.serialPortDWM1001.close()
         # sleep for one sec
@@ -110,7 +118,7 @@ class ReadyToLocalize(object):
         # self.serialPortDWM1001.reset_input_buffer()
         self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
         self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        self.rate.sleep()
+        rospy.Rate(1).sleep()
         serialReadLine = self.serialPortDWM1001.read_until()
         if "reset" in serialReadLine:
             rospy.loginfo("succesfully closed ")
@@ -118,13 +126,107 @@ class ReadyToLocalize(object):
 
     def loop(self) :
         """
-        Initialize port and dwm1001 api
+        Read and publish data
         :param:
         :returns: none
         """
         # just read everything from serial port
         serialReadLine = self.serialPortDWM1001.read_until()
+        #Topic 1: PoseWitchCovariance
+        pwc = PoseWithCovarianceStamped()
+        pwc.header.stamp = rospy.get_rostime()
+        pwc.header.frame_id = self.world_frame_id
+        pub_pose_with_cov.publish(pwc)
 
+        #Topic 2: IMU
+        imu = Imu()
+        imu.header.stamp = rospy.get_rostime()
+        imu.header.frame_id = self.tag_frame_id
+        #imu.orientation =  pypozyx.Quaternion()
+        imu.orientation_covariance = [0,0,0,0,0,0,0,0,0]
+        #imu.angular_velocity = pypozyx.AngularVelocity()
+        imu.angular_velocity_covariance = [0,0,0,0,0,0,0,0,0]
+        #imu.linear_acceleration = pypozyx.LinearAcceleration()
+        imu.linear_acceleration_covariance = [0,0,0,0,0,0,0,0,0]
+
+        pub_imu.publish(imu)
+
+        #Topic 3: Anchors Info
+        for i in range(len(anchors)):
+            dr = AnchorInfo()
+            dr.header.stamp = rospy.get_rostime()
+            dr.header.frame_id = self.world_frame_id
+            dr.id = hex(anchors[i].network_id)
+            dr.position.x = (float)(anchors[i].pos.x) * 0.001
+            dr.position.y = (float)(anchors[i].pos.y) * 0.001
+            dr.position.z = (float)(anchors[i].pos.z) * 0.001
+
+            iter_ranging = 0
+            while iter_ranging < self.do_ranging_attempts:
+
+                device_range = DeviceRange()
+                status = self.pozyx.doRanging(self.anchors[i].network_id, device_range, self.tag_device_id)
+                dr.distance = (float)(device_range.distance) * 0.001
+                dr.RSS = device_range.RSS
+
+                if status == POZYX_SUCCESS:
+                    dr.status = True
+                    self.range_error_counts[i] = 0
+                    iter_ranging = self.do_ranging_attempts
+                else:
+                    dr.status = False
+                    self.range_error_counts[i] += 1
+                    if self.range_error_counts[i] > 9:
+                        self.range_error_counts[i] = 0
+                        rospy.logerr("Anchor %d (%s) lost", i, dr.id)
+                iter_ranging += 1
+
+
+
+            # device_range = DeviceRange()
+            # status = self.pozyx.doRanging(self.anchors[i].network_id, device_range)
+            # dr.distance = (float)(device_range.distance) * 0.001
+            # dr.RSS = device_range.RSS
+
+            # if status == POZYX_SUCCESS:
+            #     dr.status = True
+            #     self.range_error_counts[i] = 0
+            # else:
+            #     status = self.pozyx.doRanging(self.anchors[i].network_id, device_range)
+            #     dr.distance = (float)(device_range.distance) * 0.001
+            #     dr.RSS = device_range.RSS
+            #     if status == POZYX_SUCCESS:
+            #         dr.status = True
+            #         self.range_error_counts[i] = 0
+            #     else:
+            #         dr.status = False
+            #         self.range_error_counts[i] += 1
+            #         if self.range_error_counts[i] > 9:
+            #             self.range_error_counts[i] = 0
+            #             rospy.logerr("Anchor %d (%s) lost", i, dr.id)
+
+            dr.child_frame_id = "anchor_" + str(i)
+            pub_anchor_info[i].publish(dr)
+            
+        """
+        pwc.pose.pose.position = Coordinates()
+        pwc.pose.pose.orientation =  pypozyx.Quaternion()
+        cov = pypozyx.PositionError()
+
+        status = self.pozyx.doPositioning(pwc.pose.pose.position, self.dimension, self.height, self.algorithm, self.tag_device_id)
+        pozyx.getQuaternion(pwc.pose.pose.orientation, self.tag_device_id)
+        pozyx.getPositionError(cov, self.tag_device_id)
+
+        cov_row1 =[cov.x, cov.xy, cov.xz, 0, 0, 0]
+        cov_row2 =[cov.xy, cov.y, cov.yz, 0, 0, 0]
+        cov_row3 =[cov.xz, cov.yz, cov.z, 0, 0, 0]
+        cov_row4 =[0, 0, 0, 0, 0, 0]
+        cov_row5 =[0, 0, 0, 0, 0, 0]
+        cov_row6 =[0, 0, 0, 0, 0, 0]
+
+        pwc.pose.covariance = cov_row1 + cov_row2 + cov_row3 + cov_row4 + cov_row5 + cov_row6
+        """
+        
         try:
             self.publishTagPositions(serialReadLine)
 
@@ -145,6 +247,7 @@ class ReadyToLocalize(object):
 
             # The number of elements should be 2 + 6*NUMBER_OF_ANCHORS + 5 (TAG POS)
             number_of_anchors = (len(arrayData) - 7)/6
+            rospy.loginfo("Number of anchors: " + str(number_of_anchors))
 
             for i in range(number_of_anchors) :
 
@@ -163,7 +266,7 @@ class ReadyToLocalize(object):
                     self.topics[node_id+"_dist"] = rospy.Publisher(
                         '/dwm1001' + 
                         "{}".format("/"+self.network if self.use_network else "") + 
-                        '/tag/' + self.tag_name +
+                        '/tag/' + self.tag_device_id +
                         '/to/anchor/' + node_id +
                         "/distance", 
                         Float64, 
@@ -202,9 +305,9 @@ class ReadyToLocalize(object):
 
                 # Topic is now a tag with same name as node_id
                 first_time = False
-                if self.tag_name not in self.topics :
+                if self.tag_device_id not in self.topics :
                     first_time = True
-                    self.topics[self.tag_name] = rospy.Publisher('/dwm1001/tag/'+self.tag_name+"/position", PoseStamped, queue_size=100)
+                    self.topics[self.tag_device_id] = rospy.Publisher('/dwm1001/tag/'+self.tag_device_id+"/position", PoseStamped, queue_size=100)
                 p = PoseStamped()
                 p.header.stamp = rospy.Time.now()  
                 p.pose.position.x = float(arrayData[-4])
@@ -214,10 +317,10 @@ class ReadyToLocalize(object):
                 p.pose.orientation.y = 0.0
                 p.pose.orientation.z = 0.0
                 p.pose.orientation.w = 1.0
-                self.topics[self.tag_name].publish(p)
+                self.topics[self.tag_device_id].publish(p)
 
                 if self.verbose or first_time :
-                    rospy.loginfo("Tag " + self.tag_name + ": "
+                    rospy.loginfo("Tag " + self.tag_device_id + ": "
                                   + " x: "
                                   + str(p.pose.position.x)
                                   + " y: "
@@ -395,10 +498,43 @@ if __name__ == "__main__":
 
     rospy.init_node('dwm1001_node')
 
-    rate = rospy.Rate(10)
+    # Reading parameters
+    serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0')
 
-    # Starting communication with Pozyx
-    rdl = ReadyToLocalize()
+    num_anchors = int(rospy.get_param('~num_anchors', 4))
+    tag_device_id = (rospy.get_param('~tag_device_id', 'None'))
+
+    algorithm = int(rospy.get_param('~algorithm'))
+    dimension = int(rospy.get_param('~dimension'))
+    height    = int(rospy.get_param('~height'))
+    frequency = int(rospy.get_param('~frequency'))
+
+    world_frame_id = rospy.get_param('~world_frame_id', 'world')
+    tag_frame_id = rospy.get_param('~tag_frame_id', 'pozyx_tag')
+
+    do_ranging_attempts = rospy.get_param('~do_ranging_attempts', 1)
+
+    # Creating publishers
+    pub_pose_with_cov = rospy.Publisher('~pose_with_cov', PoseWithCovarianceStamped, queue_size=1)
+    pub_imu = rospy.Publisher('~imu', Imu, queue_size=1)
+
+    anchors = []
+    for i in range(num_anchors):
+        #anchors.append(DeviceCoordinates(anchor_id[i], 1, Coordinates(anchor_coordinates[i][0], anchor_coordinates[i][1], anchor_coordinates[i][2])))
+        anchors.append(1)
+
+    pub_anchor_info = []
+
+    for i in range(len(anchors)):
+        topic_name = "~anchor_info_" + str(i)
+        pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=1))
+
+    pub_pose = rospy.Publisher('~pose', PoseStamped , queue_size=1)
+
+    # ROS rate
+    rate = rospy.Rate(10)
+    # Starting communication with DWM1001 module
+    rdl = ReadyToLocalize(anchors, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height)
     rdl.initSerial()
     #rdl.setup()
     while not rospy.is_shutdown():
@@ -406,7 +542,6 @@ if __name__ == "__main__":
             rdl.loop()
         except KeyboardInterrupt:
             rdl.handleKeyboardInterrupt()
-        finally:
-            rdl.quit()
-
         rate.sleep()
+
+    rdl.quit()
