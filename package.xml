@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package>
+  <name>dwm1001_drivers</name>
+  <version>0.0.1</version>
+  <description>DWM1001 ROS driver</description>
+
+  <maintainer email="emilio.garcia@uib.es">Emilio Garcia-Fidalgo</maintainer>
+  <maintainer email="xisco.bonnin@uib.es">Francisco Bonnin-Pascual</maintainer>
+  <maintainer email="esau.ortiz@uib.es">Esau Ortiz</maintainer>
+
+  <license>TODO</license>
+
+  <author email="esau.ortiz@uib.es">Esau Ortiz</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>uwb_msgs</build_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>uwb_msgs</run_depend>
+  
+  <export>
+  </export>
+</package>
