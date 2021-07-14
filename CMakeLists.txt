@@ -27,7 +27,7 @@ catkin_package(
   DEPENDS
 )
 
-catkin_install_python(PROGRAMS scripts/dwm1001_drivers.py
+catkin_install_python(PROGRAMS scripts/dwm1001_driver_ros.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
