@@ -14,6 +14,7 @@ from geometry_msgs.msg import *
 from uwb_msgs.msg import AnchorInfo
 
 from dwm1001_apiCommands import DWM1001_API_COMMANDS
+from dwm1001_apiCommands import DWMAnchorPosesReq
 
 #TODO
 #from sensor_msgs.msg import Imu
@@ -47,8 +48,10 @@ class ReadyToLocalize(object):
     def initSerial(self):
         """
         Initialize port and dwm1001 api
-        :param:
-        :returns: none
+        Parameters
+        ----------
+        Returns
+        ----------
         """
 
         # Serial port settings
@@ -57,8 +60,7 @@ class ReadyToLocalize(object):
             baudrate = 115200,
             parity = serial.PARITY_ODD,
             stopbits = serial.STOPBITS_TWO,
-            bytesize = serial.SEVENBITS,
-            timeout = 0.05
+            bytesize = serial.SEVENBITS
         )
 
         # close the serial port in case the previous run didn't closed it properly
@@ -81,8 +83,10 @@ class ReadyToLocalize(object):
     def initializeDWM1001API(self):
         """
         Initialize dwm10801 api, by sending sending bytes
-        :param:
-        :returns: none
+        Parameters
+        ----------
+        Returns
+        ----------
         """
         # reset incase previuos run didn't close properly
         self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
@@ -95,19 +99,11 @@ class ReadyToLocalize(object):
         time.sleep(0.5)
         # send a third one - just in case
         self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+        time.sleep(0.5)
 
-    def readSerial(self):
-        """
-        Read serial string and return data as array
-        :param:
-        :returns: data array
-        """
-        try:
-            serial_read_line = self.serialPortDWM1001.read_until()
-        except:
-            return ['']
-        array_data = [x.strip() for x in serial_read_line.strip().split(' ')]
-        return array_data
+        # set anchor position lecture 
+        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.LES)
+        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
 
     def handleKeyboardInterrupt(self):
         """
@@ -135,68 +131,100 @@ class ReadyToLocalize(object):
             rospy.loginfo("succesfully closed ")
             self.serialPortDWM1001.close()
 
-    def dataValidness(self, data, size):
+    def readSerial(self, command):
         """
-        Checks if all elements in msg have at least 'size' bytes
-        :param: array, int
-        :returns: bool
+        Read serial string and return data as array
+        Parameters
+        ----------
+        command : b
+            DWM1001_API_COMMANDS
+        Returns
+        -------
+        array_data : array
+            data as array
         """
-        for element in data:
-            if len(element) < size:
-                return False
-        True
+        try:
+            serial_read_line = self.serialPortDWM1001.read_until()
+        except:
+            return ['']
+        array_data = [x.strip() for x in serial_read_line.strip().split(' ')]
+        if command in array_data:
+            return ['']
+        return array_data
 
-    def getAnchorData(self):
-        # Show distances to ranging anchors and the position if location engine is enabled
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.LES)
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        #time.sleep(0.05) # improves serial reading when stationary i.e. returns non empty anchor_poses
-
+    def getDataFromSerial(self, dwm_request, read_attempts = 10):
+        """ Tries to read retrieved 'data' with 'expected_size' bytes
+        from serial port sending 'command'
+        Parameters
+        ----------
+        command : b (Bytes)
+            DWM1001_API_COMMANDS command
+        expected_size : int
+            number of expected bytes. Should be the minimum expected size
+        read_attempts : int
+            attempts to read 'data' with at least 'expected_size' bytes
+        Returns
+        -------
+        data : array
+            retrieved data
+        """
+        # Send command
+        #self.serialPortDWM1001.write(dwm_request.command)
+        #self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+        
         # Read data
         is_data_valid = False
         n_attempts = 0
         while is_data_valid == False:
-            data = self.readSerial()
-            is_data_valid = self.dataValidness(data, 25)
+            data = self.readSerial(dwm_request)
+            is_data_valid = dwm_request.validness(data)
             n_attempts += 1
-            if n_attempts > 25: # max attempts to read serial, not related with dataValidness
+            if n_attempts > read_attempts: # max attempts to read serial
                 return []
-        # Stop read
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+        return data
 
-        # Now each element of data array has de following format anchor_id[X,Y,Z]=distance_to_tag
+    def getAnchorData(self):
+        """ Read and formats serial data
+        Parameters
+        ----------
+        Returns
+        ----------
+        """
+        # Show distances to ranging anchors and the position if location engine is enabled
+        anchor_data_request = DWMAnchorPosesReq(is_tracking_engine_enabled = False)
+        data = self.getDataFromSerial(anchor_data_request)
+        if data == []:
+            return [], []
+        if False:
+            anchor_data_array, tag_pose = [data[:-2], data[-1]]
+        else:
+            anchor_data_array = data
+            tag_pose = None
+        # Now each element of anchor_data_array has de following format: anchor_id[X,Y,Z]=distance_to_tag
         anchor_poses = []
-        for anchor_data in data:
+        for anchor_data in anchor_data_array:
             anchor_id, anchor_data = anchor_data.split("[")
             anchor_id = anchor_id[-4:] # ensure 4 bytes anchor_id
             anchor_pose, anchor_distance = anchor_data.split("]=")
             anchor_poses.append([anchor_id, anchor_pose, anchor_distance])
-        return anchor_poses
+
+        return anchor_poses, tag_pose
 
     def loop(self) :
         """
         Read and publish data
-        :param:
-        :returns: none
+        Parameters
+        ----------
+        Returns
+        ----------
         """
-        #Topic 1: PoseWitchCovariance
+        # read anchor data (always) and estimated tag pose (optional)
+        anchor_data, tag_pose = self.getAnchorData()
+        #Topic: PoseWitchCovariance
         pwc = PoseWithCovarianceStamped()
         pwc.header.stamp = rospy.get_rostime()
         pwc.header.frame_id = self.world_frame_id
         pub_pose_with_cov.publish(pwc)
-
-        #Topic 2: IMU
-        imu = Imu()
-        imu.header.stamp = rospy.get_rostime()
-        imu.header.frame_id = self.tag_frame_id
-        #imu.orientation =  pypozyx.Quaternion()
-        imu.orientation_covariance = [0,0,0,0,0,0,0,0,0]
-        #imu.angular_velocity = pypozyx.AngularVelocity()
-        imu.angular_velocity_covariance = [0,0,0,0,0,0,0,0,0]
-        #imu.linear_acceleration = pypozyx.LinearAcceleration()
-        imu.linear_acceleration_covariance = [0,0,0,0,0,0,0,0,0]
-
-        pub_imu.publish(imu)
 
         """
         pwc.pose.pose.position = Coordinates()
@@ -216,17 +244,16 @@ class ReadyToLocalize(object):
 
         pwc.pose.covariance = cov_row1 + cov_row2 + cov_row3 + cov_row4 + cov_row5 + cov_row6
         """
-        
-        anchor_data = self.getAnchorData()
 
-        if self.dataValidness(anchor_data, 25) == True:
-            #Topic 3: Anchors Info
-            for i in range(len(anchors)):
+        #Topic: Anchors Info
+
+        if anchor_data != []:
+            for i in range(len(anchor_data)):
                 dr = AnchorInfo()
                 dr.header.stamp = rospy.get_rostime()
                 dr.header.frame_id = self.world_frame_id
                 dr.id = anchor_data[i][0]
-                x, y, z = map(float, anchor_data[1][1].split(','))
+                x, y, z = map(float, anchor_data[i][1].split(','))
                 dr.position.x = x
                 dr.position.y = y
                 dr.position.z = z
@@ -234,7 +261,8 @@ class ReadyToLocalize(object):
                 dr.distance = float(anchor_data[i][2])
                 dr.RSS = 0
 
-                if True: # TODO: check if anchor_id is in list of expected anchors to be in the network
+                #if status == POZYX_SUCCESS:
+                if True: # TODO: check missing anchors in anchor_data
                     dr.status = True
                     self.range_error_counts[i] = 0
                 else:
@@ -243,28 +271,6 @@ class ReadyToLocalize(object):
                     if self.range_error_counts[i] > 9:
                         self.range_error_counts[i] = 0
                         rospy.logerr("Anchor %d (%s) lost", i, dr.id)
-
-                # device_range = DeviceRange()
-                # status = self.pozyx.doRanging(self.anchors[i].network_id, device_range)
-                # dr.distance = (float)(device_range.distance) * 0.001
-                # dr.RSS = device_range.RSS
-
-                # if status == POZYX_SUCCESS:
-                #     dr.status = True
-                #     self.range_error_counts[i] = 0
-                # else:
-                #     status = self.pozyx.doRanging(self.anchors[i].network_id, device_range)
-                #     dr.distance = (float)(device_range.distance) * 0.001
-                #     dr.RSS = device_range.RSS
-                #     if status == POZYX_SUCCESS:
-                #         dr.status = True
-                #         self.range_error_counts[i] = 0
-                #     else:
-                #         dr.status = False
-                #         self.range_error_counts[i] += 1
-                #         if self.range_error_counts[i] > 9:
-                #             self.range_error_counts[i] = 0
-                #             rospy.logerr("Anchor %d (%s) lost", i, dr.id)
 
                 dr.child_frame_id = anchor_data[i][0]
                 pub_anchor_info[i].publish(dr)
@@ -337,7 +343,7 @@ if __name__ == "__main__":
     pub_pose = rospy.Publisher('~pose', PoseStamped , queue_size=1)
 
     # ROS rate
-    rate = rospy.Rate(1000)
+    rate = rospy.Rate(10)
     # Starting communication with DWM1001 module
     rdl = ReadyToLocalize(anchors, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height)
     rdl.initSerial()

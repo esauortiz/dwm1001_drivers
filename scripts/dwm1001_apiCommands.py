@@ -42,3 +42,40 @@ class DWM1001_API_COMMANDS:
         APS             = b'aps'    # Set position of the node.See section 3.4.2for more detail
         ACAS            = b'acas'   # Configures node as anchor with given options
         ACTS            = b'acts'   # Configures node as tag with given options
+
+class DWMAnchorPosesReq(object):
+        def __init__(self, is_tracking_engine_enabled = False):
+                self.command = DWM1001_API_COMMANDS.LES
+                self.is_tracking_engine_enabled = is_tracking_engine_enabled
+
+        def validness(self, data):
+                """
+                Checks if all elements in anchor 'data' have at least 25 bytes
+                and if estimated tag pose at least 23 bytes                
+                :param: array of strings
+                :returns: bool
+                """
+                if self.is_tracking_engine_enabled:
+                        data, tag_pose_est = [data[:-2], data[-1]]
+                        if len(tag_pose_est) < 23:
+                                return False
+                for element in data:
+                        if len(element) < 25:
+                                return False
+                return True
+
+class DWMAccReq(object):
+        def __init__(self):
+                self.command = DWM1001_API_COMMANDS.AV
+
+        def validness(self, data):
+                """
+                Checks if 'data' have at least 24 bytes
+                :param: string
+                :returns: bool
+                """
+                if 'acc:' not in data or 'x' not in data or \
+                        'y' not in data or 'z' not in data:
+                        return False
+                return True        
+        
