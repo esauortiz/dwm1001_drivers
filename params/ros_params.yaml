@@ -1,0 +1,10 @@
+serial_port: "/dev/ttyACM0"
+use_network: False
+verbose: True
+algorithm: 0
+dimension: 0
+height: 0
+frequency: 0
+world_frame_id: "world"
+tag_frame_id: "tag_frame"
+

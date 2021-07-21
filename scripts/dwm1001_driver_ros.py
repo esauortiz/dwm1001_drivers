@@ -12,6 +12,7 @@ from std_msgs.msg       import Float64
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import *
 from uwb_msgs.msg import AnchorInfo
+from bleak import *
 
 from dwm1001_apiCommands import DWM1001_API_COMMANDS
 from dwm1001_apiCommands import DWMAnchorPosesReq
@@ -39,8 +40,8 @@ class ReadyToLocalize(object):
         # Get port and tag name
         self.dwm_port = rospy.get_param('~serial_port')
         self.use_network = rospy.get_param('~use_network', False)
-        self.network = rospy.get_param('~network', "default")
-        self.verbose = rospy.get_param('~verbose', False)
+        self.network = rospy.get_param('~network_id', "default")
+        self.verbose = rospy.get_param('~n_anchors', False)
 
         # Empty dictionary to store topics being published
         self.topics = {}
@@ -313,7 +314,7 @@ if __name__ == "__main__":
     serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0')
 
     num_anchors = int(rospy.get_param('~num_anchors', 4))
-    tag_device_id = (rospy.get_param('~tag_device_id', 'None'))
+    tag_device_id = (rospy.get_param('~tag_id', 'None'))
 
     algorithm = int(rospy.get_param('~algorithm'))
     dimension = int(rospy.get_param('~dimension'))
