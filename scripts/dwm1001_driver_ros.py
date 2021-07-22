@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
 """ 
-    For more info on the documentation go to https://www.decawave.com/sites/default/files/dwm1001-api-guide.pdf
+@file: dwm1001_driver_ros.py
+@description: ros node to publish distance between tag and anchors
+              using UART API from https://www.decawave.com/dwm1001/api/
+@author: Esau Ortiz
+@date: july 2021
 """
 
 import os, sys
 from pickle import FALSE
 import rospy, time, serial, random
 from std_msgs.msg import Header
-from std_msgs.msg       import Float64
-from sensor_msgs.msg import Imu
+from std_msgs.msg import Float64
 from geometry_msgs.msg import *
 from uwb_msgs.msg import AnchorInfo
 
@@ -193,9 +196,11 @@ class ReadyToLocalize(object):
         anchor_data_request = DWMAnchorPosesReq(self.is_location_engine_enabled)
         data = self.getDataFromSerial(anchor_data_request)
         if data == []:
-            return [], []
+            return [], None
         if self.is_location_engine_enabled == True:
             anchor_data_array, tag_pose = [data[:-2], data[-1]]
+            if tag_pose[:3] != 'est':
+                tag_pose = None
         else:
             anchor_data_array = data
             tag_pose = None
@@ -209,7 +214,7 @@ class ReadyToLocalize(object):
 
         return anchor_poses, tag_pose
 
-    def loop(self) :
+    def loop(self, debug = False) :
         """
         Read and publish data
         Parameters
@@ -228,27 +233,29 @@ class ReadyToLocalize(object):
             anchor_distance_list.append(anchor_data[2])
             
         if tag_pose is not None:
-            if False:
-                # Topic: PoseWitchCovariance
-                pwc = PoseWithCovarianceStamped()
-                pwc.header.stamp = rospy.get_rostime()
-                pwc.header.frame_id = self.world_frame_id
-                #pwc.pose.pose.position.x = tag_pose[0]
-                #pwc.pose.pose.position.y = tag_pose[1]
-                #pwc.pose.pose.position.z = tag_pose[2]
-                pub_pose_with_cov.publish(pwc)
-                
-                # Topic 4: PoseStamped
-                ps = PoseStamped()
-                ps.header.stamp = rospy.get_rostime()
-                ps.header.frame_id = self.world_frame_id
-                ps.pose.position = pwc.pose.pose.position
-                ps.pose.orientation =  pwc.pose.pose.orientation
-                pub_pose.publish(ps)
+            tag_pose = tag_pose[4:]
+            tag_pose_x, tag_pose_y, tag_pose_z, _ = tag_pose.split(',')
+            # Topic: PoseWitchCovariance
+            pwc = PoseWithCovarianceStamped()
+            pwc.header.stamp = rospy.get_rostime()
+            pwc.header.frame_id = self.world_frame_id
+            pwc.pose.pose.position.x = float(tag_pose_x)
+            pwc.pose.pose.position.y = float(tag_pose_y)
+            pwc.pose.pose.position.z = float(tag_pose_z)
+            pub_pose_with_cov.publish(pwc)
+            
+            # Topic 4: PoseStamped
+            ps = PoseStamped()
+            ps.header.stamp = rospy.get_rostime()
+            ps.header.frame_id = self.world_frame_id
+            ps.pose.position = pwc.pose.pose.position
+            ps.pose.orientation =  pwc.pose.pose.orientation
+            pub_pose.publish(ps)
 
         # Topic: Anchors Info
         if anchor_data_list != []:
-            #print(anchor_id_list)
+            if debug:
+                print(anchor_id_list)
             for self_anchor_id in self.anchor_id_list:
                 dr = AnchorInfo()
                 dr.header.stamp = rospy.get_rostime()
@@ -268,6 +275,7 @@ class ReadyToLocalize(object):
                     dr.position.y = float(y)
                     dr.position.z = float(z)
                     dr.distance = float(anchor_distance_list[idx])
+                    #print('found anchor ' + str(dr.id) + ' with coords (' + str(dr.position.x) + ', ' + str(dr.position.y) + ', ' + str(dr.position.x) + ') and distance ' + str(dr.distance))
                 else:
                     dr.status = False
                     self.range_error_counts[self_idx] += 1
@@ -326,7 +334,7 @@ if __name__ == "__main__":
     #rdl.setup()
     while not rospy.is_shutdown():
         try:
-            rdl.loop()
+            rdl.loop(debug=False)
         except KeyboardInterrupt:
             rdl.handleKeyboardInterrupt()
         rate.sleep()
