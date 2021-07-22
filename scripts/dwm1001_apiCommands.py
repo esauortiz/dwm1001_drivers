@@ -44,18 +44,18 @@ class DWM1001_API_COMMANDS:
         ACTS            = b'acts'   # Configures node as tag with given options
 
 class DWMAnchorPosesReq(object):
-        def __init__(self, is_tracking_engine_enabled = False):
+        def __init__(self, is_location_engine_enabled = False):
                 self.command = DWM1001_API_COMMANDS.LES
-                self.is_tracking_engine_enabled = is_tracking_engine_enabled
+                self.is_location_engine_enabled = is_location_engine_enabled
 
         def validness(self, data):
                 """
                 Checks if all elements in anchor 'data' have at least 25 bytes
-                and if estimated tag pose at least 23 bytes                
+                and if location engine is enabled tag pose at least 23 bytes                
                 :param: array of strings
                 :returns: bool
                 """
-                if self.is_tracking_engine_enabled:
+                if self.is_location_engine_enabled:
                         data, tag_pose_est = [data[:-2], data[-1]]
                         if len(tag_pose_est) < 23:
                                 return False
@@ -77,5 +77,4 @@ class DWMAccReq(object):
                 if 'acc:' not in data or 'x' not in data or \
                         'y' not in data or 'z' not in data:
                         return False
-                return True        
-        
+                return True
