@@ -1,0 +1,18 @@
+<!--
+  DWM1001 nodes visualization launcher
+ -->
+<launch>
+  <arg name="map_name" default="srvlab"/>
+  <arg name="map_file" default="$(find dwm1001_drivers)/maps/$(arg map_name).yaml"/>
+
+  <!-- World to map TF --> 
+  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="1.0 3.0 0.0 0.0 0.0 0.0 /world /map 100"/>
+
+  <!-- rviz w/ configuration-->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find dwm1001_drivers)/rviz/nodes_viz.rviz" />
+  
+  <!-- map publisher -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
+    <param name="frame_id" value="/map" />
+  </node>
+</launch>

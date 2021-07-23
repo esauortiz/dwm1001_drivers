@@ -31,7 +31,7 @@ catkin_install_python(PROGRAMS scripts/dwm1001_driver_ros.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-catkin_install_python(PROGRAMS scripts/dwm1001_location.py
+catkin_install_python(PROGRAMS scripts/dwm1001_localization.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
