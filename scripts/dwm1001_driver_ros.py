@@ -219,6 +219,8 @@ class ReadyToLocalize(object):
         Read and publish data
         Parameters
         ----------
+        debug: bool
+            print some data for debugging
         Returns
         ----------
         """
