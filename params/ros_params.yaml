@@ -5,7 +5,6 @@ algorithm: 0
 dimension: 0
 height: 0
 frequency: 0
-world_frame_id: "world"
 tag_frame_id: "tag_frame"
 visualize_anchors: True
 

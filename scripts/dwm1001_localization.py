@@ -13,7 +13,7 @@
 import rospy
 import numpy as np
 from uwb_msgs.msg import AnchorInfo
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
 
 
 class AnchorSubscriber(object):
@@ -26,7 +26,8 @@ class AnchorSubscriber(object):
         rospy.Subscriber("dwm1001_node/anchor_info_" + str(idx), AnchorInfo, self.callback)
 
 class LocationEngine(object):
-    def __init__(self, n_anchors):
+    def __init__(self, world_frame_id, n_anchors):
+        self.world_frame_id = world_frame_id
         # set anchor subscribers
         self.tag_coords = []
         self.tag_status = False
@@ -34,7 +35,7 @@ class LocationEngine(object):
         for idx in range(n_anchors):
             self.anchor_subs_list.append(AnchorSubscriber(idx))
         # set estimated coordinates pub
-        self.estimated_coord_pub = rospy.Publisher("dwm1001_location", Pose, queue_size=10)
+        self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=10)
 
     def computeTagCoords(self, anchor_subs_updated):
         """
@@ -94,6 +95,14 @@ class LocationEngine(object):
 
         if len(anchor_subs_updated) >= 4:
             tag_coord = self.computeTagCoords(anchor_subs_updated)
+            ps = PoseStamped()
+            ps.header.stamp = rospy.get_rostime()
+            ps.header.frame_id = self.world_frame_id
+            ps.pose.position.x = tag_coord[0]
+            ps.pose.position.y = tag_coord[1]
+            ps.pose.position.z = tag_coord[2]
+            self.estimated_coord_pub.publish(ps)
+
             if debug: 
                 print('Four anchor-tag distances have been received, computing tag coords ...')
                 print(tag_coord)
@@ -106,16 +115,17 @@ class LocationEngine(object):
 
 if __name__ == '__main__':
 
-    rospy.init_node('dwm1001_ls_location')
+    rospy.init_node('dwm1001_localization')
 
     # ROS rate
     rate = rospy.Rate(5)
 
     # read how many anchors are in the network
-    n_anchors = 5
-
+    n_anchors = int(rospy.get_param('~n_anchors'))
+    world_frame_id = str(rospy.get_param('~world_frame_id'))
+    
     # location engine object
-    location_engine = LocationEngine(n_anchors)
+    location_engine = LocationEngine(world_frame_id, n_anchors)
 
     while not rospy.is_shutdown():
         try:

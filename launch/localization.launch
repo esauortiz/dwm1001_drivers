@@ -1,0 +1,7 @@
+<launch>
+    <arg name="nodes_cfg_label" default="default"/>
+
+    <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="screen">
+        <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
+    </node>
+</launch>
