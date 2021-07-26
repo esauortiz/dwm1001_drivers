@@ -8,12 +8,8 @@
 @date: july 2021
 """
 
-import os, sys
-from pickle import FALSE
-import rospy, time, serial, random
-from std_msgs.msg import Header
-from std_msgs.msg import Float64
-from geometry_msgs.msg import *
+import rospy, time, serial
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from uwb_msgs.msg import AnchorInfo
 
 from dwm1001_apiCommands import DWM1001_API_COMMANDS
@@ -279,13 +275,13 @@ class ReadyToLocalize(object):
                     dr.position.y = float(y)
                     dr.position.z = float(z)
                     dr.distance = float(anchor_distance_list[idx])
-                    
+
                     if self.visualize_anchors:
                         ps = PoseStamped()
                         ps.header.stamp = rospy.get_rostime()
                         ps.header.frame_id = self.world_frame_id
                         ps.pose.position = dr.position
-                        pub_anchor_pose.publish(ps)
+                        pub_anchor_pose[self_idx].publish(ps)
 
                     #print('found anchor ' + str(dr.id) + ' with coords (' + str(dr.position.x) + ', ' + str(dr.position.y) + ', ' + str(dr.position.x) + ') and distance ' + str(dr.distance))
                 else:
