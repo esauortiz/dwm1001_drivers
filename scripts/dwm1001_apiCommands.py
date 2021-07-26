@@ -50,17 +50,17 @@ class DWMAnchorPosesReq(object):
 
         def validness(self, data):
                 """
-                Checks if all elements in anchor 'data' have at least 25 bytes
-                and if location engine is enabled tag pose at least 23 bytes                
+                Checks if all elements in anchor 'data' have at least 18 bytes
+                and if location engine is enabled tag pose at least 21 bytes                
                 :param: array of strings
                 :returns: bool
                 """
                 if self.is_location_engine_enabled:
                         data, tag_pose_est = [data[:-2], data[-1]]
-                        if len(tag_pose_est) < 23:
+                        if len(tag_pose_est) < 18:
                                 return False
                 for element in data:
-                        if len(element) < 25:
+                        if len(element) < 21:
                                 return False
                 return True
 

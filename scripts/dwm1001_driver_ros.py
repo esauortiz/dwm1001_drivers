@@ -294,6 +294,8 @@ class ReadyToLocalize(object):
 
                 dr.child_frame_id = self_anchor_id
                 pub_anchor_info[self_idx].publish(dr)
+        elif debug:
+            print("Anchor data has not been received")
 
 if __name__ == "__main__":
 

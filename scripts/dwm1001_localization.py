@@ -63,17 +63,35 @@ class LocationEngine(object):
             anchors_coord[i] = [float(x), float(y), float(z)]
             anchors_distances[i] = d
 
+        """
+        # step by step 
+        N = n_anchor_subs_updated - 1
+        A = np.empty((N, 3))
+        for i in range(N):
+            for j in range(3): # xyz coords
+                A[i][j] = 2 * (anchors_coord[N][j] - anchors_coord[i][j])
+
+        B = np.empty((N,))
+        for i in range(N):
+            coord_squared_sum_i = 0
+            for coord in anchors_coord[i]:
+                coord_squared_sum_i -= coord**2
+        
+            coord_squared_sum_N = 0
+            for coord in anchors_coord[N]:
+                coord_squared_sum_N += coord**2
+        
+            B[i] = anchors_distances[i]**2 - anchors_distances[N]**2 + coord_squared_sum_i + coord_squared_sum_N
+        """
+
         # build A matrix
-        A = np.copy(anchors_coord)
+        A = 2 * np.copy(anchors_coord)
         for i in range(A.shape[0] - 1): A[i] = A[-1] - A[i]
         A = A[:-1] # remove last row
 
         # build B matrix
-        B = np.copy(anchors_distances)
-        for i in range(B.shape[0] - 1):
-            # ri^2  - rN^2     - xi^2 - yi^2 - zi^2                + xN^2 + yN^2 + zN^2
-            B[i] += - B[-1]**2 - (anchors_coord[i]**2).sum(axis=0) + (anchors_coord[-1]**2).sum(axis=0)
-        B = B[:-1] # remove last element
+        B = np.copy(anchors_distances)**2
+        B = B[:-1] - B[-1] - np.sum(anchors_coord**2, axis = 1)[:-1] + np.sum(anchors_coord[-1]**2, axis = 0)
 
         return np.dot(np.linalg.pinv(A), B)
 
@@ -129,7 +147,7 @@ if __name__ == '__main__':
 
     while not rospy.is_shutdown():
         try:
-            location_engine.loop(debug=False)
+            location_engine.loop(debug=True)
         except KeyboardInterrupt:
             pass
             # location_engine.handleKeyboardInterrupt()
