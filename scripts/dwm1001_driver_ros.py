@@ -8,7 +8,7 @@
 @date: july 2021
 """
 
-import rospy, time, serial
+import rospy, tf, time, serial
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from uwb_msgs.msg import AnchorInfo
 
@@ -32,6 +32,7 @@ class ReadyToLocalize(object):
         #self.tag_device_id = tag_device_id
         #self.do_ranging_attempts = do_ranging_attempts
         self.visualize_anchors = visualize_anchors
+        self.tf_broadcaster = tf.TransformBroadcaster()
 
         # Get some other params
         self.is_location_engine_enabled = bool(rospy.get_param('~location_engine_enable'))
@@ -270,18 +271,18 @@ class ReadyToLocalize(object):
                     dr.status = True
                     self.range_error_counts[self_idx] = 0
 
-                    x, y, z = anchor_coord_list[idx]
-                    dr.position.x = float(x)
-                    dr.position.y = float(y)
-                    dr.position.z = float(z)
+                    x, y, z = [float(coord) for coord in anchor_coord_list[idx]]
+                    dr.position.x = x
+                    dr.position.y = y
+                    dr.position.z = z
                     dr.distance = float(anchor_distance_list[idx])
 
                     if self.visualize_anchors:
-                        ps = PoseStamped()
-                        ps.header.stamp = rospy.get_rostime()
-                        ps.header.frame_id = self.world_frame_id
-                        ps.pose.position = dr.position
-                        pub_anchor_pose[self_idx].publish(ps)
+                        self.tf_broadcaster.sendTransform(  (x, y, z),
+                                                            (0, 0, 0, 1), # orientation is not specified
+                                                            rospy.Time.now(),
+                                                            self_anchor_id,
+                                                            self.world_frame_id)
 
                     #print('found anchor ' + str(dr.id) + ' with coords (' + str(dr.position.x) + ', ' + str(dr.position.y) + ', ' + str(dr.position.x) + ') and distance ' + str(dr.distance))
                 else:
