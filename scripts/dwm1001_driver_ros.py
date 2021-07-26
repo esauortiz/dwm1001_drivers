@@ -330,15 +330,11 @@ if __name__ == "__main__":
     # Creating publishers
     pub_pose_with_cov = rospy.Publisher('~tag_pose_with_cov', PoseWithCovarianceStamped, queue_size=1)
     pub_pose = rospy.Publisher('~tag_pose', PoseStamped , queue_size=1)
-    pub_anchor_pose = []
     pub_anchor_info = []
 
     for i in range(num_anchors):
         topic_name = "~anchor_info_" + str(i)
         pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=1))
-        if visualize_anchors:
-            topic_name = "~anchor_pose_" + str(i)
-            pub_anchor_pose.append(rospy.Publisher(topic_name, PoseStamped, queue_size=1))
 
     # ROS rate
     rate = rospy.Rate(10)

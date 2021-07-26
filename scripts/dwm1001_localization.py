@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     while not rospy.is_shutdown():
         try:
-            location_engine.loop(debug=True)
+            location_engine.loop(debug=False)
         except KeyboardInterrupt:
             pass
             # location_engine.handleKeyboardInterrupt()
