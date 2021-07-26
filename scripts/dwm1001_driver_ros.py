@@ -21,20 +21,21 @@ from dwm1001_apiCommands import DWMAnchorPosesReq
 
 class ReadyToLocalize(object):
 
-    def __init__(self, anchor_id_list, anchor_coord_list, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm=None, dimension=None, height=1000):
+    def __init__(self, anchor_id_list, anchor_coord_list, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm=None, dimension=None, height=1000, visualize_anchors = False):
         """
         Initialize serial port
         """
         self.anchor_id_list = anchor_id_list
         self.anchor_coord_list = anchor_coord_list
-        self.algorithm = algorithm
-        self.dimension = dimension
-        self.height = height
+        #self.algorithm = algorithm
+        #self.dimension = dimension
+        #self.height = height
         self.range_error_counts = [0 for i in range(len(self.anchor_id_list))]
         self.world_frame_id = world_frame_id
-        self.tag_frame_id = tag_frame_id
-        self.tag_device_id = tag_device_id
-        self.do_ranging_attempts = do_ranging_attempts
+        #self.tag_frame_id = tag_frame_id
+        #self.tag_device_id = tag_device_id
+        #self.do_ranging_attempts = do_ranging_attempts
+        self.visualize_anchors = visualize_anchors
 
         # Get some other params
         self.is_location_engine_enabled = bool(rospy.get_param('~location_engine_enable'))
@@ -235,6 +236,7 @@ class ReadyToLocalize(object):
             anchor_distance_list.append(anchor_data[2])
             
         if tag_pose is not None:
+            # tag_pose has "est[x,y,z,quality]" format
             tag_pose = tag_pose[4:]
             tag_pose_x, tag_pose_y, tag_pose_z, _ = tag_pose.split(',')
             # Topic: PoseWitchCovariance
@@ -246,7 +248,7 @@ class ReadyToLocalize(object):
             pwc.pose.pose.position.z = float(tag_pose_z)
             pub_pose_with_cov.publish(pwc)
             
-            # Topic 4: PoseStamped
+            # Topic: PoseStamped
             ps = PoseStamped()
             ps.header.stamp = rospy.get_rostime()
             ps.header.frame_id = self.world_frame_id
@@ -277,6 +279,14 @@ class ReadyToLocalize(object):
                     dr.position.y = float(y)
                     dr.position.z = float(z)
                     dr.distance = float(anchor_distance_list[idx])
+                    
+                    if self.visualize_anchors:
+                        ps = PoseStamped()
+                        ps.header.stamp = rospy.get_rostime()
+                        ps.header.frame_id = self.world_frame_id
+                        ps.pose.position = dr.position
+                        pub_anchor_pose.publish(ps)
+
                     #print('found anchor ' + str(dr.id) + ' with coords (' + str(dr.position.x) + ', ' + str(dr.position.y) + ', ' + str(dr.position.x) + ') and distance ' + str(dr.distance))
                 else:
                     dr.status = False
@@ -296,6 +306,7 @@ if __name__ == "__main__":
     serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0')
 
     num_anchors = int(rospy.get_param('~n_anchors', 4))
+    visualize_anchors = int(rospy.get_param('~visualize_anchors', False))
     tag_device_id = (rospy.get_param('~tag_id', 'None'))
 
     algorithm = int(rospy.get_param('~algorithm'))
@@ -320,18 +331,22 @@ if __name__ == "__main__":
         anchors_coord.append(anchor_coord)
 
     # Creating publishers
-    pub_pose_with_cov = rospy.Publisher('~pose_with_cov', PoseWithCovarianceStamped, queue_size=1)
-    pub_pose = rospy.Publisher('~pose', PoseStamped , queue_size=1)
+    pub_pose_with_cov = rospy.Publisher('~tag_pose_with_cov', PoseWithCovarianceStamped, queue_size=1)
+    pub_pose = rospy.Publisher('~tag_pose', PoseStamped , queue_size=1)
+    pub_anchor_pose = []
     pub_anchor_info = []
 
     for i in range(num_anchors):
         topic_name = "~anchor_info_" + str(i)
         pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=1))
+        if visualize_anchors:
+            topic_name = "~anchor_pose_" + str(i)
+            pub_anchor_pose.append(rospy.Publisher(topic_name, PoseStamped, queue_size=1))
 
     # ROS rate
     rate = rospy.Rate(10)
     # Starting communication with DWM1001 module
-    rdl = ReadyToLocalize(anchors_id, anchors_coord, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height)
+    rdl = ReadyToLocalize(anchors_id, anchors_coord, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height, visualize_anchors)
     rdl.initSerial()
     #rdl.setup()
     while not rospy.is_shutdown():
