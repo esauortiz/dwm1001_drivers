@@ -1,4 +1,4 @@
-serial_port: "/dev/ttyACM0"
+serial_port: "/dev/dwm1001"
 use_network: False
 verbose: True
 algorithm: 0
@@ -7,4 +7,3 @@ height: 0
 frequency: 0
 tag_frame_id: "tag_frame"
 visualize_anchors: True
-
