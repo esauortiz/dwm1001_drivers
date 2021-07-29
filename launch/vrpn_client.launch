@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!--param name="use_sim_time" value="true"/-->
+
+  <arg name="server" default="192.168.0.8"/>
+
+  <!-- World to map TF --> 
+  <node pkg="tf" type="static_transform_publisher" name="optitrack_to_world" args="4.11 2.075 0.0 -1.5707 0.0 0.0 /world /optitrack 100"/>
+
+  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="optitrack" output="screen">
+    <rosparam subst_value="true">
+      server: $(arg server)
+      port: 3883
+
+      update_frequency: 120.0
+      frame_id: optitrack
+
+      # Use the VRPN server's time, or the client's ROS time.
+      use_server_time: false
+      broadcast_tf: true
+
+      # Must either specify refresh frequency > 0.0, or a list of trackers to create
+      refresh_tracker_frequency: 1.0
+      #trackers:
+      #- kobuki_c
+    </rosparam>
+  </node>
+
+  <!--
+  <node pkg="srv_odom_utils" type="poseToTwist_node" name="mussolTwistGT" output="screen" respawn="true">
+    <param name="filter_type" value="0"/>
+    <param name="filter_size" value="10"/>
+    <remap from="~pose" to="/optitrack/Mussol/pose"/>
+  </node>
+  -->
+</launch>

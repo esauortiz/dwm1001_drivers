@@ -152,7 +152,7 @@ class ReadyToLocalize(object):
             return ['']
         return array_data
 
-    def getDataFromSerial(self, dwm_request, read_attempts = 10):
+    def getDataFromSerial(self, dwm_request, read_attempts = 10, debug = False):
         """ Tries to read retrieved 'data' with 'expected_size' bytes
         from serial port sending 'command'
         Parameters
@@ -177,13 +177,15 @@ class ReadyToLocalize(object):
         n_attempts = 0
         while is_data_valid == False:
             data = self.readSerial(dwm_request)
+            if debug:
+                print(data)
             is_data_valid = dwm_request.validness(data)
             n_attempts += 1
             if n_attempts > read_attempts: # max attempts to read serial
                 return []
         return data
 
-    def getAnchorsData(self):
+    def getAnchorsData(self, debug = False):
         """ Read and formats serial data
         Parameters
         ----------
@@ -192,7 +194,7 @@ class ReadyToLocalize(object):
         """
         # Show distances to ranging anchors and the position if location engine is enabled
         anchor_data_request = DWMAnchorPosesReq(self.is_location_engine_enabled)
-        data = self.getDataFromSerial(anchor_data_request)
+        data = self.getDataFromSerial(anchor_data_request, debug)
         if data == []:
             return [], None
         if self.is_location_engine_enabled == True:
@@ -223,7 +225,7 @@ class ReadyToLocalize(object):
         ----------
         """
         # read anchor data (always) and estimated tag pose (optional)
-        anchor_data_list, tag_pose = self.getAnchorsData()
+        anchor_data_list, tag_pose = self.getAnchorsData(debug = True)
         anchor_id_list = []
         anchor_coord_list = []
         anchor_distance_list = []
