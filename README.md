@@ -1,6 +1,6 @@
 # DWM1001 communication through serial API
 
-This repository provides python ROS nodes to both send and receive data through serial port based on [pyserial](https://pypi.org/project/pyserial/) mainly in order to retrieve data from DWM1001 tag. Modules in this repository are based on [DWM1001 UART API](https://www.decawave.com/dwm1001/api/). Python version used is python2.7.
+This repository provides python ROS package to both send and receive data through serial port based on [pyserial](https://pypi.org/project/pyserial/) mainly in order to retrieve data from DWM1001 tag. Modules in this repository are based on [DWM1001 UART API](https://www.decawave.com/dwm1001/api/). Python version used is python2.7.
 
 ## Installation
 Copy this repository:
