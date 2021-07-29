@@ -27,7 +27,7 @@ A positioning module ```dwm1001_localization.py``` based on Least Squares (see [
 roslaunch dwm1001_drivers dwm1001_localization.launch
 ```
 
-Lastly, RVIZ configuration file is provided to visualize both Least Squares-based and DWM1001-based tag position. The latter is provided by DWM1001 and computed with the firmware module only if Tag is configured with localization engine enabled (```localization_engine: 1```). TFs of the anchors whose data is received through serial port are also represented. RVIZ with this configuration could be launche with:
+Lastly, RVIZ configuration file is provided to visualize both Least Squares-based and DWM1001-based tag position. The latter is provided by DWM1001 and computed with the firmware module only if tag is configured with localization engine enabled (```localization_engine: 1```). TFs of the anchors whose data is received through serial port are also represented. RVIZ with this configuration could be launche with:
 
 ```bash
 roslaunch dwm1001_drivers nodes_viz.launch
