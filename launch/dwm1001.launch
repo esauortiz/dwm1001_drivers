@@ -3,7 +3,7 @@
     <arg name="device_id" default="dwm1001"/>
     <arg name="serial_port" default="/dev/$(arg device_id)"/>
 
-    <node name="dwm1001_tag_node" pkg="dwm1001_drivers" type="dwm1001_driver_ros.py" output="screen">
+    <node name="$(arg device_id)_tag_node" pkg="dwm1001_drivers" type="dwm1001_driver_ros.py" output="screen">
         <rosparam file="$(find dwm1001_drivers)/params/ros_params.yaml" command="load"/>
         <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
         <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/tag_operation_mode.yaml" command="load"/>
