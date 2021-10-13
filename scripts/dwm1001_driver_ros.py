@@ -340,7 +340,7 @@ if __name__ == "__main__":
 
     for i in range(num_anchors):
         topic_name = "~anchor_info_" + str(i)
-        pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=1))
+        pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=10))
 
     # ROS rate
     rate = rospy.Rate(10)

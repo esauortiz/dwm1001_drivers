@@ -123,7 +123,7 @@ class LocationEngine(object):
             self.estimated_coord_pub.publish(ps)
 
             if debug: 
-                print('Four anchor-tag distances have been received, computing tag coords ...')
+                print(str(len(anchor_subs_updated)) + ' anchor-tag distances have been received, computing tag coords ...')
                 print(tag_coord)
                 
         # discard msgs if they have not arrived during one rate.sleep()
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     rospy.init_node('dwm1001_localization')
 
     # ROS rate
-    rate = rospy.Rate(5)
+    rate = rospy.Rate(10)
 
     # read how many anchors are in the network
     n_anchors = int(rospy.get_param('~n_anchors'))
