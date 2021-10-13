@@ -36,7 +36,7 @@ class LocationEngine(object):
             for idx in range(n_anchors):
                 self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
         # set estimated coordinates pub
-        self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=10)
+        self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=1)
 
     def computeTagCoords(self, anchor_subs_updated):
         """
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     rospy.init_node('dwm1001_localization')
 
     # ROS rate
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(5)
 
     # read how many anchors are in the network
     n_anchors = int(rospy.get_param('~n_anchors'))
