@@ -1,9 +1,11 @@
 <launch>
     <arg name="nodes_cfg_label" default="default"/>
+    <arg name="serial_port" default="/dev/dwm1001"/>
 
     <node name="dwm1001_node" pkg="dwm1001_drivers" type="dwm1001_driver_ros.py" output="screen">
         <rosparam file="$(find dwm1001_drivers)/params/ros_params.yaml" command="load"/>
         <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
         <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/tag_operation_mode.yaml" command="load"/>
+        <param name="serial_port" value="$(arg serial_port)" />
     </node>
 </launch>
