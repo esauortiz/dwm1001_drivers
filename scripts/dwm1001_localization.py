@@ -20,20 +20,21 @@ class AnchorSubscriber(object):
     def callback(self, anchor_info):
         self.anchor_info = anchor_info
         self.new_anchor_info = True
-    def __init__(self, idx):
+    def __init__(self, idx, tag_id):
         self.anchor_info = None
         self.new_anchor_info = False
-        rospy.Subscriber("dwm1001_node/anchor_info_" + str(idx), AnchorInfo, self.callback)
+        rospy.Subscriber(tag_id + "_tag_node/anchor_info_" + str(idx), AnchorInfo, self.callback)
 
 class LocationEngine(object):
-    def __init__(self, world_frame_id, n_anchors):
+    def __init__(self, world_frame_id, tag0_id, tag1_id, n_anchors):
         self.world_frame_id = world_frame_id
         # set anchor subscribers
         self.tag_coords = []
         self.tag_status = False
         self.anchor_subs_list = []
-        for idx in range(n_anchors):
-            self.anchor_subs_list.append(AnchorSubscriber(idx))
+        for tag_id in [tag0_id, tag1_id]:
+            for idx in range(n_anchors):
+                self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
         # set estimated coordinates pub
         self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=10)
 
@@ -141,9 +142,11 @@ if __name__ == '__main__':
     # read how many anchors are in the network
     n_anchors = int(rospy.get_param('~n_anchors'))
     world_frame_id = str(rospy.get_param('~world_frame_id'))
+    tag0_id = int(rospy.get_param('~tag0_id'))
+    tag1_id = int(rospy.get_param('~tag1_id'))
     
     # location engine object
-    location_engine = LocationEngine(world_frame_id, n_anchors)
+    location_engine = LocationEngine(world_frame_id, tag0_id, tag1_id, n_anchors)
 
     while not rospy.is_shutdown():
         try:

@@ -308,7 +308,8 @@ if __name__ == "__main__":
 
     num_anchors = int(rospy.get_param('~n_anchors', 4))
     visualize_anchors = int(rospy.get_param('~visualize_anchors', False))
-    tag_device_id = (rospy.get_param('~tag_id', 'None'))
+    #tag_device_id = (rospy.get_param('~tag_id', 'None'))
+    tag_device_id = None
 
     algorithm = int(rospy.get_param('~algorithm'))
     dimension = int(rospy.get_param('~dimension'))
@@ -316,7 +317,8 @@ if __name__ == "__main__":
     frequency = int(rospy.get_param('~frequency'))
 
     world_frame_id = rospy.get_param('~world_frame_id', 'world')
-    tag_frame_id = rospy.get_param('~tag_frame_id', 'dwm1001_tag')
+    #tag_frame_id = rospy.get_param('~tag_frame_id', 'dwm1001_tag')
+    tag_frame_id = None
 
     do_ranging_attempts = rospy.get_param('~do_ranging_attempts', 1)
 
