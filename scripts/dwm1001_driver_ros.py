@@ -350,7 +350,7 @@ if __name__ == "__main__":
     #rdl.setup()
     while not rospy.is_shutdown():
         try:
-            rdl.loop(debug=False)
+            rdl.loop(debug=True)
         except KeyboardInterrupt:
             rdl.handleKeyboardInterrupt()
         rate.sleep()

@@ -23,7 +23,7 @@ class AnchorSubscriber(object):
     def __init__(self, idx, tag_id):
         self.anchor_info = None
         self.new_anchor_info = False
-        rospy.Subscriber(tag_id + "_tag_node/anchor_info_" + str(idx), AnchorInfo, self.callback)
+        rospy.Subscriber("/" + tag_id + "_tag_node/anchor_info_" + str(idx), AnchorInfo, self.callback)
 
 class LocationEngine(object):
     def __init__(self, world_frame_id, tag0_id, tag1_id, n_anchors):
@@ -142,8 +142,8 @@ if __name__ == '__main__':
     # read how many anchors are in the network
     n_anchors = int(rospy.get_param('~n_anchors'))
     world_frame_id = str(rospy.get_param('~world_frame_id'))
-    tag0_id = int(rospy.get_param('~tag0_id'))
-    tag1_id = int(rospy.get_param('~tag1_id'))
+    tag0_id = rospy.get_param('~tag0_id')
+    tag1_id = rospy.get_param('~tag1_id')
     
     # location engine object
     location_engine = LocationEngine(world_frame_id, tag0_id, tag1_id, n_anchors)
