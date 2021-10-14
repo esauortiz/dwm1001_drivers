@@ -60,7 +60,7 @@ class ReadyToLocalize(object):
             parity = serial.PARITY_ODD,
             stopbits = serial.STOPBITS_TWO,
             bytesize = serial.SEVENBITS,
-            timeout = 0.2
+            timeout = 0.1
         )
 
         # close the serial port in case the previous run didn't closed it properly
@@ -269,22 +269,29 @@ class ReadyToLocalize(object):
                 idx = None
 
                 if dr.id in anchor_id_list:
-                    idx = anchor_id_list.index(dr.id)
-                    dr.status = True
-                    self.range_error_counts[self_idx] = 0
+                    try:
+                        idx = anchor_id_list.index(dr.id)
+                        dr.status = True
+                        self.range_error_counts[self_idx] = 0
 
-                    x, y, z = [float(coord) for coord in anchor_coord_list[idx]]
-                    dr.position.x = x
-                    dr.position.y = y
-                    dr.position.z = z
-                    dr.distance = float(anchor_distance_list[idx])
+                        x, y, z = [float(coord) for coord in anchor_coord_list[idx]]
+                        dr.position.x = x
+                        dr.position.y = y
+                        dr.position.z = z
+                        dr.distance = float(anchor_distance_list[idx])
 
-                    if self.visualize_anchors:
-                        self.tf_broadcaster.sendTransform(  (x, y, z),
-                                                            (0, 0, 0, 1), # orientation is not specified
-                                                            rospy.Time.now(),
-                                                            self_anchor_id,
-                                                            self.world_frame_id)
+                        if self.visualize_anchors:
+                            self.tf_broadcaster.sendTransform(  (x, y, z),
+                                                                (0, 0, 0, 1), # orientation is not specified
+                                                                rospy.Time.now(),
+                                                                self_anchor_id,
+                                                                self.world_frame_id)
+                    except:
+                        dr.status = False
+                        self.range_error_counts[self_idx] += 1
+                        if self.range_error_counts[self_idx] > 9:
+                            self.range_error_counts[self_idx] = 0
+                            #rospy.logerr("Anchor %d (%s) lost", i, dr.id)
 
                     #print('found anchor ' + str(dr.id) + ' with coords (' + str(dr.position.x) + ', ' + str(dr.position.y) + ', ' + str(dr.position.x) + ') and distance ' + str(dr.distance))
                 else:
@@ -343,7 +350,7 @@ if __name__ == "__main__":
         pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=1))
 
     # ROS rate
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(15)
     # Starting communication with DWM1001 module
     rdl = ReadyToLocalize(anchors_id, anchors_coord, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height, visualize_anchors)
     rdl.initSerial()
