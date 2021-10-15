@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-@file: dwm1001_location.py
+@file: dwm1001_localization.py
 @description: location engine based on Least Squares-Based Method presented
             in [1] "UWB-Based Self-Localization Strategies: A NovelICP-Based 
             Method and a Comparative Assessmentfor Noisy-Ranges-Prone 
@@ -14,7 +14,7 @@ import rospy
 import numpy as np
 from uwb_msgs.msg import AnchorInfo
 from geometry_msgs.msg import PoseStamped
-
+from UWBefk import UWBfilter3D
 
 class AnchorSubscriber(object):
     def callback(self, anchor_info):
@@ -37,6 +37,9 @@ class LocationEngine(object):
                 self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
         # set estimated coordinates pub
         self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=10)
+        initial_pose = np.array([1.1259,3.0572,0.80672,0,0,0]) # manually from optitrack
+        
+        self.ekf = UWBfilter3D(ftype = 'EKF', x0 = initial_pose, dt = 1, std_acc = 0.01, std_rng = 0.05, landmarks = landmarks)
 
     def computeTagCoords(self, anchor_subs_updated):
         """
