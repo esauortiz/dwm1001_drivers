@@ -61,14 +61,18 @@ class UWBfilter3D(): # constant velocity model, no heading in the state
                 Hk.append( Hki )
                 yk.append( ranges[i] - rangep )
                 num_avail = num_avail + 1
-        hk = np.asarray(hk)
-        Hk = np.asarray(Hk)
-        yk = np.asarray(yk)
-        Rk = self.std_rng * np.identity(num_avail) 
-        Sk = np.matmul(np.matmul(Hk, self.Pk_1), Hk.T) + Rk
-        Kk = np.matmul(np.matmul(self.Pk_1, Hk.T), np.linalg.inv(Sk))
-        self.x = self.xk_1 + np.matmul(Kk, yk)
-        self.P = np.matmul((np.identity(6) - np.matmul(Kk, Hk)), self.Pk_1)
+        if num_avail > 0:
+            hk = np.asarray(hk)
+            Hk = np.asarray(Hk)
+            yk = np.asarray(yk)
+            Rk = self.std_rng * np.identity(num_avail)
+            Sk = np.matmul(np.matmul(Hk, self.Pk_1), Hk.T) + Rk
+            Kk = np.matmul(np.matmul(self.Pk_1, Hk.T), np.linalg.inv(Sk))
+            self.x = self.xk_1 + np.matmul(Kk, yk)
+            self.P = np.matmul((np.identity(6) - np.matmul(Kk, Hk)), self.Pk_1)
+        else:
+            self.x = self.xk_1
+            self.P = self.Pk_1
         return
         
     def updateIEKF(self, ranges, niter): 
