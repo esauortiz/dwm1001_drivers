@@ -36,14 +36,10 @@ class LocationEngine(object):
             for idx in range(n_anchors):
                 self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
         # set estimated coordinates pub
-<<<<<<< HEAD
         self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=10)
         initial_pose = np.array([1.1259,3.0572,0.80672,0,0,0]) # manually from optitrack
         
         self.ekf = UWBfilter3D(ftype = 'EKF', x0 = initial_pose, dt = 1, std_acc = 0.01, std_rng = 0.05, landmarks = landmarks)
-=======
-        self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=1)
->>>>>>> 457ac09a2116df8c5da1bbd8dd371824a8c1e646
 
     def computeTagCoords(self, anchor_subs_updated):
         """
