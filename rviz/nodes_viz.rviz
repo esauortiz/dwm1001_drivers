@@ -7,7 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /TF1
-        - /RobotModel1
       Splitter Ratio: 0.6235294342041016
     Tree Height: 755
   - Class: rviz/Selection
@@ -75,42 +74,76 @@ Visualization Manager:
           Value: true
         DW2D9C:
           Value: true
+        DW43EB:
+          Value: true
+        DW47FC:
+          Value: true
+        DW4814:
+          Value: true
         DW4848:
           Value: true
-        kobuki_c/base_footprint:
+        DW4984:
+          Value: true
+        kobuki_a/base_footprint:
           Value: false
-        kobuki_c/base_link:
+        kobuki_a/base_link:
           Value: false
-        kobuki_c/base_scan:
+        kobuki_a/base_scan:
           Value: false
-        kobuki_c/caster_back_link:
+        kobuki_a/caster_back_link:
           Value: false
-        kobuki_c/caster_front_link:
+        kobuki_a/caster_front_link:
           Value: false
-        kobuki_c/cliff_sensor_front_link:
+        kobuki_a/cliff_sensor_front_link:
           Value: false
-        kobuki_c/cliff_sensor_left_link:
+        kobuki_a/cliff_sensor_left_link:
           Value: false
-        kobuki_c/cliff_sensor_right_link:
+        kobuki_a/cliff_sensor_right_link:
           Value: false
-        kobuki_c/gyro_link:
+        kobuki_a/gyro_link:
           Value: false
-        kobuki_c/odom:
+        kobuki_a/odom:
           Value: false
-        kobuki_c/wheel_left_link:
+        kobuki_a/wheel_left_link:
           Value: false
-        kobuki_c/wheel_right_link:
+        kobuki_a/wheel_right_link:
+          Value: false
+        kobuki_c:
           Value: false
         map:
-          Value: false
+          Value: true
+        optitrack:
+          Value: true
         world:
-          Value: false
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
+        map:
+          kobuki_a/odom:
+            kobuki_a/base_footprint:
+              kobuki_a/base_link:
+                kobuki_a/base_scan:
+                  {}
+                kobuki_a/caster_back_link:
+                  {}
+                kobuki_a/caster_front_link:
+                  {}
+                kobuki_a/cliff_sensor_front_link:
+                  {}
+                kobuki_a/cliff_sensor_left_link:
+                  {}
+                kobuki_a/cliff_sensor_right_link:
+                  {}
+                kobuki_a/gyro_link:
+                  {}
+                kobuki_a/wheel_left_link:
+                  {}
+                kobuki_a/wheel_right_link:
+                  {}
         world:
           DW009A:
             {}
@@ -118,30 +151,19 @@ Visualization Manager:
             {}
           DW2D9C:
             {}
+          DW43EB:
+            {}
+          DW47FC:
+            {}
+          DW4814:
+            {}
           DW4848:
             {}
-          map:
-            kobuki_c/odom:
-              kobuki_c/base_footprint:
-                kobuki_c/base_link:
-                  kobuki_c/base_scan:
-                    {}
-                  kobuki_c/caster_back_link:
-                    {}
-                  kobuki_c/caster_front_link:
-                    {}
-                  kobuki_c/cliff_sensor_front_link:
-                    {}
-                  kobuki_c/cliff_sensor_left_link:
-                    {}
-                  kobuki_c/cliff_sensor_right_link:
-                    {}
-                  kobuki_c/gyro_link:
-                    {}
-                  kobuki_c/wheel_left_link:
-                    {}
-                  kobuki_c/wheel_right_link:
-                    {}
+          DW4984:
+            {}
+          optitrack:
+            kobuki_c:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -199,59 +221,9 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        base_scan:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        caster_back_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        caster_front_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        cliff_sensor_front_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        cliff_sensor_left_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        cliff_sensor_right_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        gyro_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        wheel_left_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wheel_right_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: RobotModel
-      Robot Description: kobuki_c/robot_description
-      TF Prefix: kobuki_c
+      Robot Description: kobuki_a/robot_description
+      TF Prefix: kobuki_a
       Update Interval: 0
       Value: true
       Visual Enabled: true
@@ -259,7 +231,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: map
+    Fixed Frame: world
     Frame Rate: 30
   Name: root
   Tools:
@@ -283,41 +255,41 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10.908859252929688
+      Distance: 6.5419921875
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.8930944204330444
-        Y: -1.389618992805481
-        Z: -0.6960804462432861
+        X: 0.6769062876701355
+        Y: 3.2014167308807373
+        Z: 0.806576132774353
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.854796826839447
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.9235681295394897
+      Yaw: 1.573570966720581
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
   Height: 1052
   Hide Left Dock: false
-  Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001560000037efc0200000007fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000037e000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f0000037cfc0200000003fb0000001e0054006f006f006c002000500072006f0070006500720074006900650073000000003d000000c80000005c00fffffffb0000000a00560069006500770073000000010b000002ae000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000749000000a9fc0100000002fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000000000007490000000000000000fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007490000003efc0100000002fb0000000800540069006d0065010000000000000749000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000005ed0000037e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000400000000000001560000037efc0200000007fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000037e000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f0000037efc0200000003fb0000001e0054006f006f006c002000500072006f0070006500720074006900650073010000003d000000ca0000005c00fffffffb0000000a00560069006500770073010000010d000002ae000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000749000000a9fc0100000002fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000000000007490000000000000000fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007490000003efc0100000002fb0000000800540069006d0065010000000000000749000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000004d80000037e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
     collapsed: false
   Tool Properties:
-    collapsed: true
+    collapsed: false
   Views:
-    collapsed: true
+    collapsed: false
   Width: 1865
   X: 55
   Y: 0
