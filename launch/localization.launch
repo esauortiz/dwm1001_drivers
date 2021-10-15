@@ -1,8 +1,17 @@
 <launch>
     
+    <arg name="use_sim_time" default="false"/>
     <arg name="nodes_cfg_label" default="default"/>
+    <arg name="std_acc" default="0.01"/>
+    <arg name="std_rng" default="0.05"/>
+    <arg name="dt" default="0.1"/>
+    
+    <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
     <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="screen">
         <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
+        <param name="std_acc" value="$(arg std_acc)" />
+        <param name="std_rng" value="$(arg std_rng)" />
+        <param name="dt" value="$(arg dt)" />
     </node>
 </launch>
