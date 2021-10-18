@@ -15,6 +15,7 @@ import numpy as np
 from uwb_msgs.msg import AnchorInfo
 from geometry_msgs.msg import PoseStamped
 from UWBefk import UWBfilter3D
+import tf
 
 class AnchorSubscriber(object):
     def callback(self, anchor_info):
@@ -23,7 +24,16 @@ class AnchorSubscriber(object):
     def __init__(self, idx, tag_id):
         self.anchor_info = None
         self.new_anchor_info = False
-        rospy.Subscriber("/" + tag_id + "_tag_node/anchor_info_" + str(idx), AnchorInfo, self.callback)
+        rospy.Subscriber("/" + tag_id + "_tag_node/anchor_info_" + str(idx), AnchorInfo, self.callback, queue_size=1)
+
+class OptitrackSubscriber(object):
+    def callback(self, pose):
+        self.pose = pose
+        self.new_pose = True
+    def __init__(self, topic):
+        self.pose = None
+        self.new_pose = False
+        rospy.Subscriber(topic, PoseStamped, self.callback, queue_size=1)
 
 class LocationEngine(object):
     def __init__(self, world_frame_id, tag0_id, tag1_id, n_anchors, anchors_poses, ekf_kwargs):
@@ -36,10 +46,18 @@ class LocationEngine(object):
             for idx in range(n_anchors):
                 self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
         # set estimated coordinates pub
-        self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=10)
-        initial_pose = np.array([1.1259,3.0572,0.270672,0,0,0]) # manually from optitrack
-        self.old_ranges = self.compute_ranges(initial_pose[:3], anchors_poses)
-        self.ekf = UWBfilter3D(ftype = 'EKF', x0 = initial_pose, dt = ekf_kwargs['dt'], std_acc = ekf_kwargs['std_acc'], std_rng = ekf_kwargs['std_acc'], landmarks = anchors_poses)
+        self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=1)
+
+        # sub to optitrack robot pose
+        self.optitrack_sub = OptitrackSubscriber("/optitrack/kobuki_c/pose")
+        self.tf_listener = tf.TransformListener()
+
+        if ekf_kwargs['using_ekf']:
+            initial_pose = np.array([1.1259,3.0572,0.270672,0,0,0]) # manually from optitrack
+            #initial_pose = np.array([3.12,1.25,0.270672,0,0,0]) # manually from optitrack
+            self.ekf = UWBfilter3D(ftype = 'EKF', x0 = initial_pose, dt = ekf_kwargs['dt'], std_acc = ekf_kwargs['std_acc'], std_rng = ekf_kwargs['std_acc'], landmarks = anchors_poses)
+        else:
+            self.ekf = None
 
     def compute_ranges(self, tag_pose, anchors_poses):
         ranges = []
@@ -123,18 +141,30 @@ class LocationEngine(object):
                     id = anchor_sub.anchor_info.id
                     print('anchor ' + str(id) + ' with coords (' + str(x) + ', ' + str(y) + ', ' + str(z) + ') and distance ' + str(d))
             else:
-                ranges.append(-1)
+                ranges.append(-1.0)
 
-        # tag_coord computed through ekf
-        self.ekf.predict()
-        #if len(anchor_subs_updated) == 0:
-        #    ranges = self.old_ranges
-        self.ekf.update(ranges, niter = 100)
-        tag_coord = self.ekf.x
-        #self.old_ranges = ranges
+        if self.ekf is not None:
+            # tag_coord computed through ekf
+            self.ekf.predict()
+            self.ekf.update(ranges, niter = 100)
+            tag_coord = self.ekf.x
+
+        if self.optitrack_sub.new_pose and False:
+            self.tf_listener.transformPose('world', self.optitrack_sub.pose)
+            x = self.optitrack_sub.pose.pose.position.x
+            y = self.optitrack_sub.pose.pose.position.y
+            z = self.optitrack_sub.pose.pose.position.z
+            qx = self.optitrack_sub.pose.pose.orientation.x
+            qy = self.optitrack_sub.pose.pose.orientation.y
+            qz = self.optitrack_sub.pose.pose.orientation.z
+            qw = self.optitrack_sub.pose.pose.orientation.w
+            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/original/gr/' + str(self.id) + '.txt', np.array((x,y,z,qx,qy,qz,qw)))
+            #self.id +=1
+            self.optitrack_sub.new_pose = False
 
         if len(anchor_subs_updated) >= 4:
-            #tag_coord = self.computeTagCoords(anchor_subs_updated)
+            if self.ekf is None:
+                tag_coord = self.computeTagCoords(anchor_subs_updated)
             ps = PoseStamped()
             ps.header.stamp = rospy.get_rostime()
             ps.header.frame_id = self.world_frame_id
@@ -153,10 +183,12 @@ class LocationEngine(object):
         
         if debug: print('\n')
 
+def stop_node(event):
+    rospy.signal_shutdown("Shutting down localization...")
+
 if __name__ == '__main__':
 
     rospy.init_node('dwm1001_localization')
-
     # ROS rate
     rate = rospy.Rate(10)
 
@@ -165,10 +197,12 @@ if __name__ == '__main__':
     world_frame_id = str(rospy.get_param('~world_frame_id'))
     tag0_id = rospy.get_param('~tag0_id')
     tag1_id = rospy.get_param('~tag1_id')
+    # ekf params
+    using_ekf = rospy.get_param('~using_ekf')
     std_acc = float(rospy.get_param('~std_acc'))
     std_rng = float(rospy.get_param('~std_rng'))
     dt = float(rospy.get_param('~dt'))
-    ekf_kwargs = {'std_acc' : std_acc, 'std_rng' : std_rng, 'dt' : dt}
+    ekf_kwargs = {'using_ekf' : using_ekf, 'std_acc' : std_acc, 'std_rng' : std_rng, 'dt' : dt}
 
     anchor_poses = np.empty((n_anchors, 3))
     for i in range(n_anchors):
@@ -177,6 +211,10 @@ if __name__ == '__main__':
     # location engine object
     location_engine = LocationEngine(world_frame_id, tag0_id, tag1_id, n_anchors, anchor_poses, ekf_kwargs)
 
+    # if 0 then duration until KeyboardInterrupt
+    if int(rospy.get_param('~duration')) != 0:
+        rospy.Timer(rospy.Duration.from_sec(float(rospy.get_param('~duration'))), stop_node)
+    
     while not rospy.is_shutdown():
         try:
             location_engine.loop(debug=True)
