@@ -28,11 +28,15 @@ class AnchorSubscriber(object):
 
 class OptitrackSubscriber(object):
     def callback(self, pose):
+        #pose = self.tf_listener.transformPose('world', pose)
         self.pose = pose
         self.new_pose = True
     def __init__(self, topic):
         self.pose = None
         self.new_pose = False
+        self.tf_listener = tf.TransformListener()
+
+
         rospy.Subscriber(topic, PoseStamped, self.callback, queue_size=1)
 
 class LocationEngine(object):
@@ -50,7 +54,6 @@ class LocationEngine(object):
 
         # sub to optitrack robot pose
         self.optitrack_sub = OptitrackSubscriber("/optitrack/kobuki_c/pose")
-        self.tf_listener = tf.TransformListener()
 
         if ekf_kwargs['using_ekf']:
             initial_pose = np.array([1.1259,3.0572,0.270672,0,0,0]) # manually from optitrack
@@ -150,7 +153,6 @@ class LocationEngine(object):
             tag_coord = self.ekf.x
 
         if self.optitrack_sub.new_pose:
-            self.tf_listener.transformPose('world', self.optitrack_sub.pose)
             x = self.optitrack_sub.pose.pose.position.x
             y = self.optitrack_sub.pose.pose.position.y
             z = self.optitrack_sub.pose.pose.position.z

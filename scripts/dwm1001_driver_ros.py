@@ -348,7 +348,7 @@ if __name__ == "__main__":
         pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=1))
 
     # ROS rate
-    rate = rospy.Rate(15)
+    rate = rospy.Rate(10)
     # Starting communication with DWM1001 module
     rdl = ReadyToLocalize(anchors_id, anchors_coord, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height, visualize_anchors)
     rdl.initSerial()

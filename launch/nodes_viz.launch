@@ -10,7 +10,7 @@
   <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
   <!-- World to map TF --> 
-  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="1.0 3.0 0.0 0.0 0.0 0.0 /world /map 100"/>
+  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="1.0 3.0 0.0 0.0 0.0 0.0 /world /map"/>
 
   <!-- rviz w/ configuration-->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find dwm1001_drivers)/rviz/nodes_viz.rviz" />
