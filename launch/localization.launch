@@ -2,13 +2,15 @@
     
     <arg name="use_sim_time" default="True"/>
     <arg name="nodes_cfg_label" default="default"/>
-    <arg name="std_acc" default="0.1"/>
-    <arg name="std_rng" default="0.5"/>
-    <arg name="dt" default="0.1"/>
-    <arg name="using_ekf" default="True"/>
+    <arg name="std_acc" default="0.5"/>
+    <arg name="std_rng" default="1.6"/>
+    <arg name="dt" default="0.08"/>
+    <arg name="using_ekf" default="False"/>
     <arg name="duration" default="45"/> <!-- Localization node duration in seconds, if 0 then duration until KeyboardInterrupt-->
     
     <param name="use_sim_time" value="$(arg use_sim_time)"/>
+
+    <node pkg="rosbag" type="play" name="player" output="log" args="--duration 47 --clock /media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/filtered.bag"/>
 
     <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="screen">
         <param name="std_acc" value="$(arg std_acc)" />
@@ -17,5 +19,8 @@
         <param name="using_ekf" value="$(arg using_ekf)" />
         <param name="duration" value="$(arg duration)" />
         <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
-    </node>
+    </node>        
+
+    <node name="record_topics_for_verification" pkg="rosbag" type="record" args="/optitrack/kobuki_c/pose /dwm1001_localization/tag_pose -O /media/esau/hdd_at_ubuntu/bag_files/loc_rng$(arg std_rng)_acc$(arg std_acc)_dt$(arg dt).bag --duration 45" output="screen"/>
+    <!-- -->
 </launch>

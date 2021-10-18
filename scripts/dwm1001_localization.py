@@ -28,12 +28,15 @@ class AnchorSubscriber(object):
 
 class OptitrackSubscriber(object):
     def callback(self, pose):
+        self.new_pose = True
         old_nsecs = pose.header.stamp.nsecs
         pose.header.stamp.nsecs -= 500000000
-        pose = self.tf_listener.transformPose('world', pose)
+        try:
+            pose = self.tf_listener.transformPose('world', pose)
+        except:
+            self.new_pose = False
         pose.header.stamp.nsecs = old_nsecs
         self.pose = pose
-        self.new_pose = True
     def __init__(self, topic):
         self.pose = None
         self.new_pose = False
@@ -44,6 +47,7 @@ class OptitrackSubscriber(object):
 
 class LocationEngine(object):
     def __init__(self, world_frame_id, tag0_id, tag1_id, n_anchors, anchors_poses, ekf_kwargs):
+        self.id = 0
         self.world_frame_id = world_frame_id
         # set anchor subscribers
         self.tag_coords = []
@@ -54,14 +58,15 @@ class LocationEngine(object):
                 self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
         # set estimated coordinates pub
         self.estimated_coord_pub = rospy.Publisher("~tag_pose", PoseStamped, queue_size=1)
-
+        self.optitrack_in_world = rospy.Publisher("~tag_pose_gt", PoseStamped, queue_size=1)
+        self.landmarks = anchor_poses
         # sub to optitrack robot pose
         self.optitrack_sub = OptitrackSubscriber("/optitrack/kobuki_c/pose")
 
         if ekf_kwargs['using_ekf']:
             initial_pose = np.array([1.1259,3.0572,0.270672,0,0,0]) # manually from optitrack
             #initial_pose = np.array([3.12,1.25,0.270672,0,0,0]) # manually from optitrack
-            self.ekf = UWBfilter3D(ftype = 'EKF', x0 = initial_pose, dt = ekf_kwargs['dt'], std_acc = ekf_kwargs['std_acc'], std_rng = ekf_kwargs['std_acc'], landmarks = anchors_poses)
+            self.ekf = UWBfilter3D(ftype = 'EKF', x0 = initial_pose, dt = ekf_kwargs['dt'], std_acc = ekf_kwargs['std_acc'], std_rng = ekf_kwargs['std_rng'], landmarks = anchors_poses)
         else:
             self.ekf = None
 
@@ -159,12 +164,11 @@ class LocationEngine(object):
             x = self.optitrack_sub.pose.pose.position.x
             y = self.optitrack_sub.pose.pose.position.y
             z = self.optitrack_sub.pose.pose.position.z
-            qx = self.optitrack_sub.pose.pose.orientation.x
-            qy = self.optitrack_sub.pose.pose.orientation.y
-            qz = self.optitrack_sub.pose.pose.orientation.z
-            qw = self.optitrack_sub.pose.pose.orientation.w
-            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/original/gr/' + str(self.id) + '.txt', np.array((x,y,z,qx,qy,qz,qw)))
-            #self.id +=1
+            #gt_ranges = self.compute_ranges(np.array([x,y,z]), self.landmarks)
+            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + 'gr.txt', np.array((x,y,z)))
+            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_gt_ranges.txt', np.array(gt_ranges))
+            self.id +=1
+            self.optitrack_in_world.publish(self.optitrack_sub.pose)
             self.optitrack_sub.new_pose = False
 
         if len(anchor_subs_updated) >= 4:
@@ -183,8 +187,7 @@ class LocationEngine(object):
                 print(tag_coord)
                 
         # discard msgs if they have not arrived during one rate.sleep()
-        for anchor_sub in self.anchor_subs_list:
-            anchor_sub.new_anchor_info = False
+        #for anchor_sub in self.anchor_subs_list: anchor_sub.new_anchor_info = False
         
         if debug: print('\n')
 
