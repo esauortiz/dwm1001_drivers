@@ -28,7 +28,10 @@ class AnchorSubscriber(object):
 
 class OptitrackSubscriber(object):
     def callback(self, pose):
-        #pose = self.tf_listener.transformPose('world', pose)
+        old_nsecs = pose.header.stamp.nsecs
+        pose.header.stamp.nsecs -= 500000000
+        pose = self.tf_listener.transformPose('world', pose)
+        pose.header.stamp.nsecs = old_nsecs
         self.pose = pose
         self.new_pose = True
     def __init__(self, topic):
