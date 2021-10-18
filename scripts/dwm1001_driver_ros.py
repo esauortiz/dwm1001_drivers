@@ -335,8 +335,6 @@ if __name__ == "__main__":
     for i in range(num_anchors):
         anchor_id = rospy.get_param("~anchor" + str(i) + "_id")
         anchor_coord = rospy.get_param("~anchor" + str(i) + "_coordinates")
-        anchor_coord = anchor_coord.split(', ')
-        anchor_coord = [float(i) for i in anchor_coord]
         anchors_id.append(anchor_id)
         anchors_coord.append(anchor_coord)
 

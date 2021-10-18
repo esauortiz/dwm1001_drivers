@@ -149,7 +149,7 @@ class LocationEngine(object):
             self.ekf.update(ranges, niter = 100)
             tag_coord = self.ekf.x
 
-        if self.optitrack_sub.new_pose and False:
+        if self.optitrack_sub.new_pose:
             self.tf_listener.transformPose('world', self.optitrack_sub.pose)
             x = self.optitrack_sub.pose.pose.position.x
             y = self.optitrack_sub.pose.pose.position.y
