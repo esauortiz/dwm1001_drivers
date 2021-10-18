@@ -192,7 +192,7 @@ if __name__ == '__main__':
 
     rospy.init_node('dwm1001_localization')
     # ROS rate
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(12.5)
 
     # read how many anchors are in the network
     n_anchors = int(rospy.get_param('~n_anchors'))
