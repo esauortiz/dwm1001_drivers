@@ -14,7 +14,7 @@ import rospy
 import numpy as np
 from uwb_msgs.msg import AnchorInfo
 from geometry_msgs.msg import PoseStamped
-from UWBefk import UWBfilter3D
+from UWBiekf import UWB3D_iekf
 import tf
 
 class AnchorSubscriber(object):
@@ -66,7 +66,7 @@ class LocationEngine(object):
         if ekf_kwargs['using_ekf']:
             initial_pose = np.array([1.1259,3.0572,0.270672,0,0,0]) # manually from optitrack
             #initial_pose = np.array([3.12,1.25,0.270672,0,0,0]) # manually from optitrack
-            self.ekf = UWBfilter3D(ftype = 'EKF', x0 = initial_pose, dt = ekf_kwargs['dt'], std_acc = ekf_kwargs['std_acc'], std_rng = ekf_kwargs['std_rng'], landmarks = anchors_poses)
+            self.ekf = UWB3D_iekf(ftype = 'EKF', x0 = initial_pose, dt = ekf_kwargs['dt'], std_acc = ekf_kwargs['std_acc'], std_rng = ekf_kwargs['std_rng'], landmarks = anchors_poses)
         else:
             self.ekf = None
 
@@ -165,8 +165,10 @@ class LocationEngine(object):
             y = self.optitrack_sub.pose.pose.position.y
             z = self.optitrack_sub.pose.pose.position.z
             #gt_ranges = self.compute_ranges(np.array([x,y,z]), self.landmarks)
-            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + 'gr.txt', np.array((x,y,z)))
-            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_gt_ranges.txt', np.array(gt_ranges))
+            now = rospy.get_rostime()
+            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_gt_pose.txt', np.array((x,y,z)))
+            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_time_stamps.txt', np.array([now.secs, now.nsecs]))
+            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_gt_ranges.txt', np.array([ranges]))
             self.id +=1
             self.optitrack_in_world.publish(self.optitrack_sub.pose)
             self.optitrack_sub.new_pose = False
