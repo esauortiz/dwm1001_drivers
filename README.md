@@ -21,7 +21,7 @@ The main module in this package is ```dwm1001_driver_ros.py``` which funcionalit
 roslaunch dwm1001_drivers dwm1001.launch
 ```
 
-A positioning module ```dwm1001_localization.py``` based on Least Squares (see [UWB-Based Self-Localization Strategies](https://www.mdpi.com/1424-8220/20/19/5613)) is also provided and could be launched as a ROS node with:
+A positioning module ```dwm1001_localization.py``` based on Least Squares (see [UWB-Based Self-Localization Strategies](https://www.mdpi.com/1424-8220/20/19/5613)) or based on an Extended Kalman Filter (EKF) is also provided and could be launched as a ROS node with:
 
 ```bash
 roslaunch dwm1001_drivers dwm1001_localization.launch
