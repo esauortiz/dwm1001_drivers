@@ -16,7 +16,8 @@ class UWB3D_iekf(): # constant velocity model, no heading in the state
         self.std_rng = std_rng     # standard deviation range measurements
         self.landmarks = landmarks # landmarks positions, assumed numl x 3
         self.numl = landmarks.shape[0]  # number of available landmarks
-        
+        self.prev_ranges = None
+
         if dt is not None:
             self.F = np.array([[1, 0, 0, dt, 0, 0],
                                [0, 1, 0, 0, dt, 0],
@@ -70,11 +71,18 @@ class UWB3D_iekf(): # constant velocity model, no heading in the state
         self.Pk_1 = np.matmul(np.matmul(self.Fjac , self.P) , self.Fjac.T) + self.Q
         
     def updateEKF(self, ranges):
+        ranges = np.array(ranges)
+        if self.prev_ranges is None:
+            ranges_condition = np.ones(ranges.shape, dtype=bool)
+        else:
+            delta_ranges = np.abs(self.prev_ranges - ranges)
+            ranges_condition = delta_ranges < 2 * self.std_rng
+
         Hk = []
         vk = []
         num_avail = 0
         for i in range(self.numl):
-            if ranges[i] >= 0.0: # < 0 => n.a.
+            if ranges[i] >= 0.0 and ranges_condition[i]: # < 0 => n.a.
                 xdif = self.xk_1[0:3] - self.landmarks[i,:]
                 rangep = np.linalg.norm(xdif) # h_i(X_k)
                 Hki = np.zeros((1,6)).flatten()
@@ -97,6 +105,8 @@ class UWB3D_iekf(): # constant velocity model, no heading in the state
         else: 
             self.x = self.xk_1
             self.P = self.Pk_1
+
+        self.prev_ranges = ranges
         return 0 # num_iters_done
         
     def updateIEKF(self, ranges, niter): 
