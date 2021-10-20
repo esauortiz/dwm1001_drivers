@@ -166,9 +166,9 @@ class LocationEngine(object):
             z = self.optitrack_sub.pose.pose.position.z
             #gt_ranges = self.compute_ranges(np.array([x,y,z]), self.landmarks)
             now = rospy.get_rostime()
-            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_gt_pose.txt', np.array((x,y,z)))
-            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_time_stamps.txt', np.array([now.secs, now.nsecs]))
-            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/8_anchors_spiral/txt/' + str(self.id) + '_gt_ranges.txt', np.array([ranges]))
+            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/tmp/' + str(self.id) + '_gt_pose.txt', np.array((x,y,z)))
+            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/tmp/' + str(self.id) + '_time_stamps.txt', np.array([now.secs, now.nsecs]))
+            #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/tmp/' + str(self.id) + '_ranges.txt', np.array([ranges]))
             self.id +=1
             self.optitrack_in_world.publish(self.optitrack_sub.pose)
             self.optitrack_sub.new_pose = False
