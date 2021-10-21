@@ -1,6 +1,6 @@
 <launch>
     <arg name="use_sim_time" default="False"/>
-    <arg name="nodes_cfg_label" default="default"/>
+    <arg name="nodes_cfg_label" default="wall"/>
     <arg name="std_acc" default="0.4"/>
     <arg name="std_rng" default="0.05"/>
     <arg name="dt" default="0.08"/>
@@ -9,7 +9,7 @@
     
     <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
-    <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="log">
+    <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="screen">
         <param name="std_acc" value="$(arg std_acc)" />
         <param name="std_rng" value="$(arg std_rng)" />
         <param name="dt" value="$(arg dt)" />
