@@ -71,18 +71,11 @@ class UWB3D_iekf(): # constant velocity model, no heading in the state
         self.Pk_1 = np.matmul(np.matmul(self.Fjac , self.P) , self.Fjac.T) + self.Q
         
     def updateEKF(self, ranges):
-        ranges = np.array(ranges)
-        if self.prev_ranges is None:
-            ranges_condition = np.ones(ranges.shape, dtype=bool)
-        else:
-            delta_ranges = np.abs(self.prev_ranges - ranges)
-            ranges_condition = delta_ranges < 2 * self.std_rng
-
         Hk = []
         vk = []
         num_avail = 0
         for i in range(self.numl):
-            if ranges[i] >= 0.0 and ranges_condition[i]: # < 0 => n.a.
+            if ranges[i] >= 0.0:
                 xdif = self.xk_1[0:3] - self.landmarks[i,:]
                 rangep = np.linalg.norm(xdif) # h_i(X_k)
                 Hki = np.zeros((1,6)).flatten()
