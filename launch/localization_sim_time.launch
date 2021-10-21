@@ -1,5 +1,5 @@
 <launch>
-    <arg name="use_sim_time" default="False"/>
+    <arg name="use_sim_time" default="True"/>
     <arg name="nodes_cfg_label" default="default"/>
     <arg name="std_acc" default="0.4"/>
     <arg name="std_rng" default="0.05"/>
@@ -9,6 +9,8 @@
     
     <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /media/esau/hdd_at_ubuntu/bag_files/long_datasets/espiral/1_filtered.bag"/>
+
     <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="log">
         <param name="std_acc" value="$(arg std_acc)" />
         <param name="std_rng" value="$(arg std_rng)" />
@@ -17,4 +19,6 @@
         <param name="duration" value="$(arg duration)" />
         <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
     </node>        
+    <!--duration 45 -->
+    <node name="record_topics_for_verification" pkg="rosbag" type="record" args="/dwm1001_localization/tag_pose_gt /dwm1001_localization/tag_pose -O /media/esau/hdd_at_ubuntu/bag_files/long_datasets/espiral/tmp.bag" output="log"/>
 </launch>
