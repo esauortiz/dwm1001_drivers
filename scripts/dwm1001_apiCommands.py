@@ -42,6 +42,7 @@ class DWM1001_API_COMMANDS:
         APS             = b'aps'    # Set position of the node.See section 3.4.2for more detail
         ACAS            = b'acas'   # Configures node as anchor with given options
         ACTS            = b'acts'   # Configures node as tag with given options
+        NIS             = b'nis'    # Set Network ID  
 
 class DWMAnchorPosesReq(object):
         def __init__(self, is_location_engine_enabled = False):
