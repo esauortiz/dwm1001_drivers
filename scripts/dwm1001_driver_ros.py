@@ -12,10 +12,10 @@ import rospy, tf, time, serial
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from uwb_msgs.msg import AnchorInfo
 
-from dwm1001_apiCommands import DWM1001_API_COMMANDS
-from dwm1001_apiCommands import DWMAnchorPosesReq
+from dwm1001_apiCommands import DWM1001_API_COMMANDS, DWM1001_UART_API
+from dwm1001_apiCommands import DWMRangingReq
 
-class ReadyToLocalize(object):
+class ReadyToLocalize(DWM1001_UART_API):
 
     def __init__(self, anchor_id_list, anchor_coord_list, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm=None, dimension=None, height=1000, visualize_anchors = False):
         """
@@ -44,148 +44,13 @@ class ReadyToLocalize(object):
         # Empty dictionary to store topics being published
         self.topics = {}
         
-    def initSerial(self):
-        """
-        Initialize port and dwm1001 api
-        Parameters
-        ----------
-        Returns
-        ----------
-        """
-
-        # Serial port settings
-        self.serialPortDWM1001 = serial.Serial(
-            port = self.dwm_port,
-            baudrate = 115200,
-            parity = serial.PARITY_ODD,
-            stopbits = serial.STOPBITS_TWO,
-            bytesize = serial.SEVENBITS,
-            timeout = 0.1
-        )
-
-        # close the serial port in case the previous run didn't closed it properly
-        self.serialPortDWM1001.close()
-        # sleep for one sec
-        time.sleep(1)
-        # open serial port
-        self.serialPortDWM1001.open()
-
-        # check if the serial port is opened
-        if(self.serialPortDWM1001.isOpen()):
-            rospy.loginfo("Port opened: "+ str(self.serialPortDWM1001.name) )
-            # start sending commands to the board so we can initialize the board
-            self.initializeDWM1001API()
-            # give some time to DWM1001 to wake up
-            time.sleep(2)
-        else:
-            rospy.loginfo("Can't open port: "+ str(self.serialPortDWM1001.name))
-
-    def initializeDWM1001API(self):
-        """
-        Initialize dwm10801 api, by sending sending bytes
-        Parameters
-        ----------
-        Returns
-        ----------
-        """
-        # reset incase previuos run didn't close properly
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
-        # send ENTER two times in order to access api
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        # sleep for half a second
-        time.sleep(0.5)
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        # sleep for half second
-        time.sleep(0.5)
-        # send a third one - just in case
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        time.sleep(0.5)
-
+    def setRangingMode(self):
         # set anchor position lecture 
         self.serialPortDWM1001.write(DWM1001_API_COMMANDS.LES)
         self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+        time.sleep(0.5)
 
-    def handleKeyboardInterrupt(self):
-        """
-        Handles keyboard interruption
-        :param:
-        :returns: none
-        """
-        rospy.loginfo("Quitting DWM1001 Shell Mode and closing port, allow 1 second for UWB recovery")
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-
-    def quit(self):
-        """
-        QUit and send reset command to dev board
-        :param:
-        :returns: none
-        """
-        rospy.loginfo("Quitting, and sending reset command to dev board")
-        # self.serialPortDWM1001.reset_input_buffer()
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        time.sleep(1.0)
-        serialReadLine = self.serialPortDWM1001.read_until()
-        if "reset" in serialReadLine:
-            rospy.loginfo("succesfully closed ")
-            self.serialPortDWM1001.close()
-
-    def readSerial(self, command):
-        """
-        Read serial string and return data as array
-        Parameters
-        ----------
-        command : b
-            DWM1001_API_COMMANDS
-        Returns
-        -------
-        array_data : array
-            data as array
-        """
-        try:
-            serial_read_line = self.serialPortDWM1001.read_until()
-        except:
-            return ['']
-        array_data = [x.strip() for x in serial_read_line.strip().split(' ')]
-        if command in array_data:
-            return ['']
-        return array_data
-
-    def getDataFromSerial(self, dwm_request, read_attempts = 10, debug = False):
-        """ Tries to read retrieved 'data' with 'expected_size' bytes
-        from serial port sending 'command'
-        Parameters
-        ----------
-        command : b (Bytes)
-            DWM1001_API_COMMANDS command
-        expected_size : int
-            number of expected bytes. Should be the minimum expected size
-        read_attempts : int
-            attempts to read 'data' with at least 'expected_size' bytes
-        Returns
-        -------
-        data : array
-            retrieved data
-        """
-        # Send command
-        #self.serialPortDWM1001.write(dwm_request.command)
-        #self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        
-        # Read data
-        is_data_valid = False
-        n_attempts = 0
-        while is_data_valid == False:
-            data = self.readSerial(dwm_request)
-            if debug:
-                print(data)
-            is_data_valid = dwm_request.validness(data)
-            n_attempts += 1
-            if n_attempts > read_attempts: # max attempts to read serial
-                return []
-        return data
-
-    def getAnchorsData(self, debug = False):
+    def getRangingData(self, verbose = False):
         """ Read and formats serial data
         Parameters
         ----------
@@ -193,8 +58,8 @@ class ReadyToLocalize(object):
         ----------
         """
         # Show distances to ranging anchors and the position if location engine is enabled
-        anchor_data_request = DWMAnchorPosesReq(self.is_location_engine_enabled)
-        data = self.getDataFromSerial(anchor_data_request, debug)
+        ranging_request = DWMRangingReq(self.is_location_engine_enabled)
+        data = self.getDataFromSerial(ranging_request, verbose = verbose)
         if data == []:
             return [], None
         if self.is_location_engine_enabled == True:
@@ -214,18 +79,17 @@ class ReadyToLocalize(object):
 
         return anchor_poses, tag_pose
 
-    def loop(self, debug = False) :
+    def loop(self, verbose = False) :
         """
         Read and publish data
         Parameters
         ----------
-        debug: bool
-            print some data for debugging
+        verbose: bool
         Returns
         ----------
         """
         # read anchor data (always) and estimated tag pose (optional)
-        anchor_data_list, tag_pose = self.getAnchorsData(debug = True)
+        anchor_data_list, tag_pose = self.getRangingData(verbose)
         anchor_id_list = []
         anchor_coord_list = []
         anchor_distance_list = []
@@ -257,7 +121,7 @@ class ReadyToLocalize(object):
 
         # Topic: Anchors Info
         if anchor_data_list != []:
-            if debug:
+            if verbose:
                 print(anchor_id_list)
             for self_anchor_id in self.anchor_id_list:
                 dr = AnchorInfo()
@@ -303,7 +167,7 @@ class ReadyToLocalize(object):
 
                 dr.child_frame_id = self_anchor_id
                 pub_anchor_info[self_idx].publish(dr)
-        elif debug:
+        elif verbose:
             print("Anchor data has not been received")
 
 if __name__ == "__main__":
@@ -352,10 +216,12 @@ if __name__ == "__main__":
     # Starting communication with DWM1001 module
     rdl = ReadyToLocalize(anchors_id, anchors_coord, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height, visualize_anchors)
     rdl.initSerial()
+    rdl.setRangingMode()
+    
     #rdl.setup()
     while not rospy.is_shutdown():
         try:
-            rdl.loop(debug=True)
+            rdl.loop(verbose=True)
         except KeyboardInterrupt:
             rdl.handleKeyboardInterrupt()
         rate.sleep()

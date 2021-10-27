@@ -2,6 +2,8 @@
 """ For more info on the documentation go to https://www.decawave.com/sites/default/files/dwm1001-api-guide.pdf
 """
 
+import time, serial
+
 class DWM1001_API_COMMANDS:
         DOUBLE_ENTER    = b'\r\r'   # ASCII char for double Enter
         SINGLE_ENTER    = b'\r'     # ASCII char for single Enter
@@ -44,7 +46,139 @@ class DWM1001_API_COMMANDS:
         ACTS            = b'acts'   # Configures node as tag with given options
         NIS             = b'nis'    # Set Network ID  
 
-class DWMAnchorPosesReq(object):
+class DWM1001_UART_API:
+        def initSerial(self):
+                """
+                Initialize port and dwm1001 api
+                Parameters
+                ----------
+                Returns
+                ----------
+                """
+
+                # Serial port settings
+                self.serialPortDWM1001 = serial.Serial(
+                port = self.dwm_port,
+                baudrate = 115200,
+                parity = serial.PARITY_ODD,
+                stopbits = serial.STOPBITS_TWO,
+                bytesize = serial.SEVENBITS,
+                timeout = 0.1
+                )
+
+                # close the serial port in case the previous run didn't closed it properly
+                self.serialPortDWM1001.close()
+                # sleep for one sec
+                time.sleep(1)
+                # open serial port
+                self.serialPortDWM1001.open()
+
+                # check if the serial port is opened
+                if(self.serialPortDWM1001.isOpen()):
+                        print("[INFO] Port opened: "+ str(self.serialPortDWM1001.name) )
+                        # start sending commands to the board so we can initialize the board
+                        self.initializeDWM1001API()
+                        # give some time to DWM1001 to wake up
+                        time.sleep(2)
+                else:
+                        print("[INFO] Can't open port: "+ str(self.serialPortDWM1001.name))
+
+        def initializeDWM1001API(self):
+                """ Initialize dwm10801 api, by sending sending bytes
+                Parameters
+                ----------
+                Returns
+                ----------
+                """
+                # reset incase previuos run didn't close properly
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
+                # send ENTER two times in order to access api
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                # sleep for half a second
+                time.sleep(0.5)
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                # sleep for half second
+                time.sleep(0.5)
+                # send a third one - just in case
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                time.sleep(0.5)
+
+        def handleKeyboardInterrupt(self):
+                """ Handles keyboard interruption
+                Parameters
+                ----------
+                Returns
+                ----------
+                """
+                print("[INFO] Quitting DWM1001 Shell Mode and closing port, allow 1 second for UWB recovery")
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+
+        def quit(self):
+                """ Quit and send reset command to dev board
+                Parameters
+                ----------
+                Returns
+                ----------
+                """
+                print("[INFO] Quitting, and sending reset command to dev board")
+                # self.serialPortDWM1001.reset_input_buffer()
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.RESET)
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                time.sleep(1.0)
+                serialReadLine = self.serialPortDWM1001.read_until()
+                if "reset" in serialReadLine:
+                        print("[INFO] succesfully closed ")
+                        self.serialPortDWM1001.close()
+
+        def readSerial(self, command, verbose = False):
+                """ Read serial string and return data as array
+                Parameters
+                ----------
+                command : b
+                        DWM1001_API_COMMANDS
+                Returns
+                -------
+                array_data : array
+                        data as array
+                """
+                try:
+                        serial_read_line = self.serialPortDWM1001.read_until()
+                except:
+                        return ['']
+                        
+                array_data = [x.strip() for x in serial_read_line.strip().split(' ')]
+                if verbose: print(array_data)
+                if command in array_data: return ['']
+                return array_data
+
+        def getDataFromSerial(self, dwm_request, verbose = False, read_attempts = 10):
+                """ Tries to read retrieved 'data'
+                from serial port sending 'command'
+                Parameters
+                ----------
+                command : b (Bytes)
+                        DWM1001_API_COMMANDS command
+                read_attempts : int
+                        attempts to read 'data'
+                Returns
+                -------
+                data : array
+                        retrieved data
+                """
+
+                # Read data
+                is_data_valid = False
+                n_attempts = 0
+                while is_data_valid == False:
+                        data = self.readSerial(dwm_request, verbose)
+                        is_data_valid = dwm_request.validness(data)
+                        n_attempts += 1
+                        if n_attempts > read_attempts: # max attempts to read serial
+                                return []
+                return data
+
+class DWMRangingReq(object):
         def __init__(self, is_location_engine_enabled = False):
                 self.command = DWM1001_API_COMMANDS.LES
                 self.is_location_engine_enabled = is_location_engine_enabled
