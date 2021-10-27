@@ -44,12 +44,6 @@ class ReadyToLocalize(DWM1001_UART_API):
         # Empty dictionary to store topics being published
         self.topics = {}
         
-    def setRangingMode(self):
-        # set anchor position lecture 
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.LES)
-        self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
-        time.sleep(0.5)
-
     def getRangingData(self, verbose = False):
         """ Read and formats serial data
         Parameters
@@ -216,7 +210,8 @@ if __name__ == "__main__":
     # Starting communication with DWM1001 module
     rdl = ReadyToLocalize(anchors_id, anchors_coord, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height, visualize_anchors)
     rdl.initSerial()
-    rdl.setRangingMode()
+    # set ranging mode
+    rdl.les()
     
     #rdl.setup()
     while not rospy.is_shutdown():
