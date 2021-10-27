@@ -47,7 +47,7 @@ class DWM1001_API_COMMANDS:
         NIS             = b'nis'    # Set Network ID  
 
 class DWM1001_UART_API:
-        def initSerial(self):
+        def initSerial(self, serial_port):
                 """
                 Initialize port and dwm1001 api
                 Parameters
@@ -58,7 +58,7 @@ class DWM1001_UART_API:
 
                 # Serial port settings
                 self.serialPortDWM1001 = serial.Serial(
-                port = self.dwm_port,
+                port = serial_port,
                 baudrate = 115200,
                 parity = serial.PARITY_ODD,
                 stopbits = serial.STOPBITS_TWO,
@@ -146,7 +146,7 @@ class DWM1001_UART_API:
                         serial_read_line = self.serialPortDWM1001.read_until()
                 except:
                         return ['']
-                        
+
                 array_data = [x.strip() for x in serial_read_line.strip().split(' ')]
                 if verbose: print(array_data)
                 if command in array_data: return ['']
@@ -177,6 +177,87 @@ class DWM1001_UART_API:
                         if n_attempts > read_attempts: # max attempts to read serial
                                 return []
                 return data
+
+        def les(self):
+                # set anchor position lecture 
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.LES)
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                time.sleep(0.5)
+
+        def acas(self, args):
+                """Configure module as an anchor with a given configuration
+                Parameters
+                ----------
+                args: list of integers
+                        list of configuration arguments in the following order
+                        [initiator, bridge_en, enc_en, leds, ble, uwb, fw_upd]
+                """
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.ACAS)
+                time.sleep(0.05)
+
+                for arg in args:
+                        self.serialPortDWM1001.write(bytes(' ' + str(arg)))
+                        time.sleep(0.05)
+
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                time.sleep(0.5)
+
+        def acts(self, args):
+                """Configure module a tag with a given configuration
+                Parameters
+                ----------
+                args: list of integers
+                        list of configuration arguments in the following order
+                        [meas_mode, stnry_en, low_pwr, loc_en, enc, leds, ble, uwb, fw_upd]
+                """
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.ACTS)
+                time.sleep(0.05)
+
+                for arg in args:
+                        self.serialPortDWM1001.write(bytes(' ' + str(arg)))
+                        time.sleep(0.05)
+
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                time.sleep(0.5)
+
+        def aurs(self, args):
+                """ Set position update rate
+                Parameters
+                ----------
+                args: list of integers
+                        list of configuration arguments in the following order
+                        [ur, urs]
+                        see p42 DWM1001 Firmware API Guide for reference
+                """
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.AURS)
+                time.sleep(0.05)
+
+                for arg in args:
+                        self.serialPortDWM1001.write(bytes(' ' + format(arg,'02x').upper()))
+                        time.sleep(0.05)
+
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                time.sleep(0.5)
+
+        def nis(self, network_id):
+                """ Set position update rate
+                Parameters
+                ----------
+                args: string formated as '0x0000'
+                        network id    
+                """
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.NIS)
+                time.sleep(0.05)
+
+                self.serialPortDWM1001.write(bytes(' 0x'))
+                time.sleep(0.05)
+                self.serialPortDWM1001.write(bytes(network_id[2:4]))
+                time.sleep(0.05)
+                self.serialPortDWM1001.write(bytes(network_id[4:6]))
+                time.sleep(0.05)
+
+                self.serialPortDWM1001.write(DWM1001_API_COMMANDS.SINGLE_ENTER)
+                time.sleep(0.5)
 
 class DWMRangingReq(object):
         def __init__(self, is_location_engine_enabled = False):
