@@ -16,7 +16,7 @@ network0:
   anchor4_coordinates: [8.13, 2.07, 0.10] #DW4814
 
 network1: 
-  network_id: "0x11a7"
+  network_id: "0x11A7"
   tag_id: "DW02D6"
   n_anchors: 5
   anchor0_id: "DW0038"
