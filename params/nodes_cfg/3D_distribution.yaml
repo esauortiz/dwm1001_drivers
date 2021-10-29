@@ -9,11 +9,11 @@ network1:
   anchor2_id: "DW4814"
   anchor3_id: "DW43EB"
   anchor4_id: "DW1632"
-  anchor0_coordinates: [0.93, 3.67, 0.00] #DW4984
-  anchor1_coordinates: [0.93, 2.07, 0.00] #DW4806
-  anchor2_coordinates: [0.93, 0.87, 0.00] #DW4814
-  anchor3_coordinates: [8.13, 3.67, 0.00] #DW43EB
-  anchor4_coordinates: [8.13, 2.07, 0.00] #DW1632
+  anchor0_coordinates: [0.00, 1.00, 0.00] #DW4984
+  anchor1_coordinates: [0.00, 3.00, 0.00] #DW4806
+  anchor2_coordinates: [1.00, 2.00, 0.00] #DW4814
+  anchor3_coordinates: [2.00, 1.00, 0.00] #DW43EB
+  anchor4_coordinates: [2.00, 3.00, 0.00] #DW1632
 
 network0: 
   network_id: "0x11A7"
