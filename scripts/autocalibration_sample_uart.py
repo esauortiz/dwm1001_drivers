@@ -6,12 +6,13 @@
               using UART API from https://www.decawave.com/dwm1001/api/
 @author: Esau Ortiz
 @date: october 2021
-@usage: python autocalibration_sample_uart.py <module> <nodes_configuration_label> <n_samples>
+@usage: python autocalibration_sample_uart.py <n_samples> <nodes_configuration_label> <n_samples>
 
-        # where <module> is the module id with DW1234 format
+        # where 
                 <nodes_configuration_label> is a yaml file which includes nets, 
                 tag ids, anchor ids and anchor coords
                 <n_samples> samples to save when retrieving ranges
+                <module> is the module id with DW1234 format
 """
 
 from dwm1001_apiCommands import DWM1001_UART_API
@@ -63,12 +64,12 @@ def readYaml(file):
 
 def main():
     # target module from which retrieve ranges
-    target_dwm_module = sys.argv[1]
+    target_dwm_module = sys.argv[3]
     # load nodes configuration label
     try: nodes_configuration_label = sys.argv[2]
     except: nodes_configuration_label = 'default'
     # load nodes configuration label
-    try: n_samples = int(sys.argv[2])
+    try: n_samples = int(sys.argv[1])
     except: n_samples = 10
 
     # load anchors cfg
@@ -131,8 +132,8 @@ def main():
             print(location_data)
             if location_data is not None:
                 for anchor in location_data:
-                    row_idx = anchor_id_list.index('DW' + anchor)
-                    col_idx = sample_idx
+                    col_idx = anchor_id_list.index('DW' + anchor)
+                    row_idx = sample_idx
                     ranging_data[row_idx, col_idx] = location_data[anchor]
             time.sleep(0.1)
     
