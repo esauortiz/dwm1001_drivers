@@ -140,7 +140,7 @@ def main():
     np.savetxt(target_dwm_module + '_ranging_data.txt', ranging_data)
     
     # set module as anchor
-    initiator = 1   # initiator enabled
+    initiator = 0   # initiator enabled
     bridge_en = 0   # bridge mode disabled
     enc_en = 0      # encryption disabled
     leds = 1        # leds disabled
