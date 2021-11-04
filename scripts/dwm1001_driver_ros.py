@@ -17,20 +17,14 @@ from dwm1001_apiCommands import DWMRangingReq
 
 class ReadyToLocalize(DWM1001_UART_API):
 
-    def __init__(self, anchor_id_list, anchor_coord_list, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm=None, dimension=None, height=1000, visualize_anchors = False):
+    def __init__(self, anchor_id_list, anchor_coord_list, world_frame_id, visualize_anchors = False):
         """
         Initialize serial port
         """
         self.anchor_id_list = anchor_id_list
         self.anchor_coord_list = anchor_coord_list
-        #self.algorithm = algorithm
-        #self.dimension = dimension
-        #self.height = height
         self.range_error_counts = [0 for i in range(len(self.anchor_id_list))]
         self.world_frame_id = world_frame_id
-        #self.tag_frame_id = tag_frame_id
-        #self.tag_device_id = tag_device_id
-        #self.do_ranging_attempts = do_ranging_attempts
         self.visualize_anchors = visualize_anchors
         self.tf_broadcaster = tf.TransformBroadcaster()
 
@@ -66,10 +60,13 @@ class ReadyToLocalize(DWM1001_UART_API):
         # Now each element of anchor_data_array has de following format: anchor_id[X,Y,Z]=distance_to_tag
         anchor_poses = []
         for anchor_data in anchor_data_array:
-            anchor_id, anchor_data = anchor_data.split("[")
-            anchor_id = anchor_id[-4:] # ensure 4 bytes anchor_id
-            anchor_pose, anchor_distance = anchor_data.split("]=")
-            anchor_poses.append([anchor_id, anchor_pose, anchor_distance])
+            try:
+                anchor_id, anchor_data = anchor_data.split("[")
+                anchor_id = anchor_id[-4:] # ensure 4 bytes anchor_id
+                anchor_pose, anchor_distance = anchor_data.split("]=")
+                anchor_poses.append([anchor_id, anchor_pose, anchor_distance])
+            except ValueError:
+                return [], None
 
         return anchor_poses, tag_pose
 
@@ -169,47 +166,44 @@ if __name__ == "__main__":
     rospy.init_node('dwm1001_node')
 
     # Read parameters
-    serial_port = rospy.get_param('~serial_port', '/dev/ttyACM0')
+    tag_id = rospy.get_param('~tag_id')
+    serial_port = '/dev/' + tag_id
 
-    num_anchors = int(rospy.get_param('~n_anchors', 4))
-    visualize_anchors = int(rospy.get_param('~visualize_anchors', False))
-    #tag_device_id = (rospy.get_param('~tag_id', 'None'))
-    tag_device_id = None
+    # find tag_id's network
+    n_networks = int(rospy.get_param('~n_networks'))
+    network_list = [rospy.get_param('~network' + str(i)) for i in range(n_networks)]
+    network = None
+    for network in network_list:
+        if network['tag_id'] == tag_id: break
 
-    algorithm = int(rospy.get_param('~algorithm'))
-    dimension = int(rospy.get_param('~dimension'))
-    height    = int(rospy.get_param('~height'))
-    frequency = int(rospy.get_param('~frequency'))
-
+    # publish anchor as tf frame to visualize
+    visualize_anchors = rospy.get_param('~visualize_anchors')
     world_frame_id = rospy.get_param('~world_frame_id', 'world')
-    #tag_frame_id = rospy.get_param('~tag_frame_id', 'dwm1001_tag')
-    tag_frame_id = None
 
-    do_ranging_attempts = rospy.get_param('~do_ranging_attempts', 1)
-
-    # Read anchors id and pose
-    anchors_id = []
-    anchors_coord = []
-    for i in range(num_anchors):
-        anchor_id = rospy.get_param("~anchor" + str(i) + "_id")
-        anchor_coord = rospy.get_param("~anchor" + str(i) + "_coordinates")
-        anchors_id.append(anchor_id)
-        anchors_coord.append(anchor_coord)
+    # Read anchor_id and its coordinates
+    anchor_id_list = []
+    anchor_coord_list = []
+    for i in range(network['n_anchors']):
+        anchor_id = network["anchor" + str(i) + "_id"]
+        anchor_coord = network["anchor" + str(i) + "_coordinates"]
+        anchor_id_list.append(anchor_id)
+        anchor_coord_list.append(anchor_coord)
+        print(anchor_id)
 
     # Creating publishers
     pub_pose_with_cov = rospy.Publisher('~tag_pose_with_cov', PoseWithCovarianceStamped, queue_size=1)
     pub_pose = rospy.Publisher('~tag_pose', PoseStamped , queue_size=1)
     pub_anchor_info = []
 
-    for i in range(num_anchors):
+    for i in range(network['n_anchors']):
         topic_name = "~anchor_info_" + str(i)
         pub_anchor_info.append(rospy.Publisher(topic_name, AnchorInfo, queue_size=1))
 
     # ROS rate
     rate = rospy.Rate(12.5)
     # Starting communication with DWM1001 module
-    rdl = ReadyToLocalize(anchors_id, anchors_coord, do_ranging_attempts, world_frame_id, tag_frame_id, tag_device_id, algorithm, dimension, height, visualize_anchors)
-    rdl.initSerial()
+    rdl = ReadyToLocalize(anchor_id_list, anchor_coord_list, world_frame_id, visualize_anchors)
+    rdl.initSerial(serial_port)
     # set ranging mode
     rdl.les()
     
