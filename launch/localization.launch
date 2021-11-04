@@ -15,6 +15,6 @@
         <param name="dt" value="$(arg dt)" />
         <param name="using_ekf" value="$(arg using_ekf)" />
         <param name="duration" value="$(arg duration)" />
-        <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
+        <rosparam file="$(find dwm1001_drivers)/params/nodes_cfg/$(arg nodes_cfg_label).yaml" command="load"/>
     </node>        
 </launch>
