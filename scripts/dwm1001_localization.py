@@ -14,6 +14,7 @@ import rospy
 import numpy as np
 from uwb_msgs.msg import AnchorInfo
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from UWBiekf import UWB3D_iekf
 import tf
 
@@ -41,19 +42,41 @@ class OptitrackSubscriber(object):
         self.pose = None
         self.new_pose = False
         self.tf_listener = tf.TransformListener()
-
-
         rospy.Subscriber(topic, PoseStamped, self.callback, queue_size=1)
 
+class OdometrySubscriber(object):
+    def callback(self, odometry):
+        self.new_pose = True
+        self.pose.header.stamp = rospy.get_rostime()
+        self.pose.header.seq = odometry.header.seq
+        self.pose.header.frame_id = odometry.header.frame_id
+        self.pose.pose.position.x = odometry.pose.pose.position.x
+        self.pose.pose.position.y = odometry.pose.pose.position.y
+        self.pose.pose.position.z = odometry.pose.pose.position.z
+        self.pose.pose.orientation.x = odometry.pose.pose.orientation.x
+        self.pose.pose.orientation.y = odometry.pose.pose.orientation.y
+        self.pose.pose.orientation.z = odometry.pose.pose.orientation.z
+        self.pose.pose.orientation.w = odometry.pose.pose.orientation.w
+        try:
+            self.pose = self.tf_listener.transformPose(self.world_frame_id, self.pose)
+        except:
+            self.new_pose = False
+    def __init__(self, topic, world_frame_id):
+        self.pose = PoseStamped()
+        self.new_pose = False
+        self.world_frame_id = world_frame_id
+        self.tf_listener = tf.TransformListener()
+        rospy.Subscriber(topic, Odometry, self.callback, queue_size=1)
+
 class LocationEngine(object):
-    def __init__(self, world_frame_id, tag0_id, tag1_id, n_anchors, anchors_poses, ekf_kwargs):
+    def __init__(self, world_frame_id, tag_id_list, n_anchors_list, anchors_poses, ekf_kwargs):
         self.id = 0
         self.world_frame_id = world_frame_id
         # set anchor subscribers
         self.tag_coords = []
         self.tag_status = False
         self.anchor_subs_list = []
-        for tag_id in [tag0_id, tag1_id]:
+        for tag_id, n_anchors in zip(tag_id_list, n_anchors_list):
             for idx in range(n_anchors):
                 self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
         # set estimated coordinates pub
@@ -62,6 +85,7 @@ class LocationEngine(object):
         self.landmarks = anchor_poses
         # sub to optitrack robot pose
         self.optitrack_sub = OptitrackSubscriber("/optitrack/kobuki_c/pose")
+        self.odometry_sub = OdometrySubscriber("/kobuki_d/odom", world_frame_id)
 
         if ekf_kwargs['using_ekf']:
             initial_pose = np.array([1.1259,3.0572,0.270672,0,0,0]) # manually from optitrack
@@ -134,7 +158,7 @@ class LocationEngine(object):
 
         return np.dot(np.linalg.pinv(A), B)
 
-    def loop(self, debug = False):
+    def loop(self, verbose = False):
         # updated anchor subs list
         anchor_subs_updated = []
         ranges = []
@@ -148,7 +172,7 @@ class LocationEngine(object):
                 z = anchor_sub.anchor_info.position.z
                 d = anchor_sub.anchor_info.distance
                 ranges.append(d)
-                if debug:
+                if verbose:
                     id = anchor_sub.anchor_info.id
                     print('anchor ' + str(id) + ' with coords (' + str(x) + ', ' + str(y) + ', ' + str(z) + ') and distance ' + str(d))
             else:
@@ -173,6 +197,19 @@ class LocationEngine(object):
             self.optitrack_in_world.publish(self.optitrack_sub.pose)
             self.optitrack_sub.new_pose = False
 
+        if self.odometry_sub.new_pose:
+            x = self.odometry_sub.pose.pose.position.x
+            y = self.odometry_sub.pose.pose.position.y
+            z = self.odometry_sub.pose.pose.position.z
+            #gt_ranges = self.compute_ranges(np.array([x,y,z]), self.landmarks)
+            now = rospy.get_rostime()
+            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/tmp/' + str(self.id) + '_gt_pose.txt', np.array((x,y,z)))
+            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/tmp/' + str(self.id) + '_time_stamps.txt', np.array([now.secs, now.nsecs]))
+            np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/tmp/' + str(self.id) + '_ranges.txt', np.array([ranges]))
+            self.id +=1
+            self.optitrack_in_world.publish(self.odometry_sub.pose)
+            self.odometry_sub.new_pose = False
+
         if len(anchor_subs_updated) >= 4:
             if self.ekf is None:
                 tag_coord = self.computeTagCoords(anchor_subs_updated)
@@ -184,14 +221,14 @@ class LocationEngine(object):
             ps.pose.position.z = tag_coord[2]
             self.estimated_coord_pub.publish(ps)
 
-            if debug: 
+            if verbose: 
                 print(str(len(anchor_subs_updated)) + ' anchor-tag distances have been received, computing tag coords ...')
                 print(tag_coord)
                 
         # discard msgs if they have not arrived during one rate.sleep()
         #for anchor_sub in self.anchor_subs_list: anchor_sub.new_anchor_info = False
         
-        if debug: print('\n')
+        if verbose: print('\n')
 
 def stop_node(event):
     rospy.signal_shutdown("Shutting down localization...")
@@ -203,10 +240,13 @@ if __name__ == '__main__':
     rate = rospy.Rate(12.5)
 
     # read how many anchors are in the network
-    n_anchors = int(rospy.get_param('~n_anchors'))
+    n_networks = int(rospy.get_param('~n_networks'))
+    network_list = [rospy.get_param('~network' + str(i)) for i in range(n_networks)]
+    tag_id_list = [network['tag_id'] for network in network_list]
+    n_anchors_list = [network['n_anchors'] for network in network_list]
+    n_total_anchors = np.sum(np.array(n_anchors_list))
+
     world_frame_id = str(rospy.get_param('~world_frame_id'))
-    tag0_id = rospy.get_param('~tag0_id')
-    tag1_id = rospy.get_param('~tag1_id')
     # ekf params
     using_ekf = rospy.get_param('~using_ekf')
     std_acc = float(rospy.get_param('~std_acc'))
@@ -214,12 +254,13 @@ if __name__ == '__main__':
     dt = float(rospy.get_param('~dt'))
     ekf_kwargs = {'using_ekf' : using_ekf, 'std_acc' : std_acc, 'std_rng' : std_rng, 'dt' : dt}
 
-    anchor_poses = np.empty((n_anchors, 3))
-    for i in range(n_anchors):
-        anchor_poses[i] = rospy.get_param('~anchor' + str(i) + '_coordinates')
+    anchor_poses = np.empty((n_total_anchors, 3))
+    for network in network_list:
+        for i in range(network['n_anchors']):
+            anchor_poses[i] = network['anchor' + str(i) + '_coordinates']
 
     # location engine object
-    location_engine = LocationEngine(world_frame_id, tag0_id, tag1_id, n_anchors, anchor_poses, ekf_kwargs)
+    location_engine = LocationEngine(world_frame_id, tag_id_list, n_anchors_list, anchor_poses, ekf_kwargs)
 
     # if 0 then duration until KeyboardInterrupt
     if int(rospy.get_param('~duration')) != 0:
@@ -227,7 +268,7 @@ if __name__ == '__main__':
     
     while not rospy.is_shutdown():
         try:
-            location_engine.loop(debug=True)
+            location_engine.loop(verbose=False)
         except KeyboardInterrupt:
             pass
             # location_engine.handleKeyboardInterrupt()
