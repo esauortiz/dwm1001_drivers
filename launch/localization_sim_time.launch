@@ -1,15 +1,15 @@
 <launch>
     <arg name="use_sim_time" default="True"/>
-    <arg name="nodes_cfg_label" default="wall"/>
+    <arg name="nodes_cfg_label" default="subterraneoB"/>
     <arg name="std_acc" default="0.4"/>
     <arg name="std_rng" default="0.05"/>
     <arg name="dt" default="0.08"/>
     <arg name="using_ekf" default="True"/>
-    <arg name="duration" default="55"/> <!-- Localization node duration in seconds, if 0 then duration until KeyboardInterrupt-->
+    <arg name="duration" default="110"/> <!-- Localization node duration in seconds, if 0 then duration until KeyboardInterrupt-->
     
     <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
-    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /media/esau/hdd_at_ubuntu/bag_files/long_datasets/plano_xz_yplus/2_filtered.bag"/>
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /media/esau/hdd_at_ubuntu/bag_files/subterraneo/zigzag/2_filtered.bag"/>
 
     <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="log">
         <param name="std_acc" value="$(arg std_acc)" />
@@ -17,8 +17,8 @@
         <param name="dt" value="$(arg dt)" />
         <param name="using_ekf" value="$(arg using_ekf)" />
         <param name="duration" value="$(arg duration)" />
-        <rosparam file="$(find dwm1001_drivers)/dwm_ble_cfg/params/nodes_cfg_$(arg nodes_cfg_label).yaml" command="load"/>
+        <rosparam file="$(find dwm1001_drivers)/params/nodes_cfg/$(arg nodes_cfg_label).yaml" command="load"/>
     </node>        
-    <!--duration 45 -->
-    <node name="record_topics_for_verification" pkg="rosbag" type="record" args="/dwm1001_localization/tag_pose_gt /dwm1001_localization/tag_pose -O /media/esau/hdd_at_ubuntu/bag_files/long_datasets/plano_xz_yplus/2_ekf.bag --duration 55" output="log"/>
+    <!--duration 45
+    <node name="record_topics_for_verification" pkg="rosbag" type="record" args="/dwm1001_localization/tag_pose_gt /dwm1001_localization/tag_pose -O /media/esau/hdd_at_ubuntu/bag_files/long_datasets/plano_xz_yplus/2_ekf.bag" output="log"/> -->
 </launch>
