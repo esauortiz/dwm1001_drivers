@@ -76,6 +76,7 @@ class LocationEngine(object):
         self.tag_coords = []
         self.tag_status = False
         self.anchor_subs_list = []
+        self.anchor_poses = anchor_poses
         for tag_id, n_anchors in zip(tag_id_list, n_anchors_list):
             for idx in range(n_anchors):
                 self.anchor_subs_list.append(AnchorSubscriber(idx, tag_id))
@@ -88,7 +89,7 @@ class LocationEngine(object):
         self.odometry_sub = OdometrySubscriber("/kobuki_d/odom", world_frame_id)
 
         if ekf_kwargs['using_ekf']:
-            initial_pose = np.array([1.1259,3.0572,0.270672,0,0,0]) # manually from optitrack
+            initial_pose = np.array([1.95,22.85,0.0,0,0,0]) # manually from optitrack
             #initial_pose = np.array([3.12,1.25,0.270672,0,0,0]) # manually from optitrack
             self.ekf = UWB3D_iekf(ftype = 'EKF', x0 = initial_pose, dt = ekf_kwargs['dt'], std_acc = ekf_kwargs['std_acc'], std_rng = ekf_kwargs['std_rng'], landmarks = anchors_poses)
         else:
@@ -162,10 +163,14 @@ class LocationEngine(object):
         # updated anchor subs list
         anchor_subs_updated = []
         ranges = []
-        for anchor_sub in self.anchor_subs_list:
+        for anchor_sub, anchor_pose in zip(self.anchor_subs_list, self.anchor_poses):
             # check is subs have received new anchor info
             # also check if anchor status is True (i.e. anchor found)
             if anchor_sub.new_anchor_info == True and anchor_sub.anchor_info.status == True:
+                # force anchor position as specified in cfg file
+                anchor_sub.anchor_info.position.x = anchor_pose[0]
+                anchor_sub.anchor_info.position.y = anchor_pose[1]
+                anchor_sub.anchor_info.position.z = anchor_pose[2]             
                 anchor_subs_updated.append(anchor_sub)
                 x = anchor_sub.anchor_info.position.x
                 y = anchor_sub.anchor_info.position.y
@@ -255,20 +260,22 @@ if __name__ == '__main__':
     ekf_kwargs = {'using_ekf' : using_ekf, 'std_acc' : std_acc, 'std_rng' : std_rng, 'dt' : dt}
 
     anchor_poses = np.empty((n_total_anchors, 3))
+    i = 0
     for network in network_list:
-        for i in range(network['n_anchors']):
-            anchor_poses[i] = network['anchor' + str(i) + '_coordinates']
-
+        for j in range(network['n_anchors']):
+            anchor_poses[i] = network['anchor' + str(j) + '_coordinates']
+            i += 1
     # location engine object
     location_engine = LocationEngine(world_frame_id, tag_id_list, n_anchors_list, anchor_poses, ekf_kwargs)
-
+    #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/subterraneo/landmarks.txt', np.array(anchor_poses))
+    
     # if 0 then duration until KeyboardInterrupt
     if int(rospy.get_param('~duration')) != 0:
         rospy.Timer(rospy.Duration.from_sec(float(rospy.get_param('~duration'))), stop_node)
     
     while not rospy.is_shutdown():
         try:
-            location_engine.loop(verbose=False)
+            location_engine.loop(verbose=True)
         except KeyboardInterrupt:
             pass
             # location_engine.handleKeyboardInterrupt()
