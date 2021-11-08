@@ -6,10 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.6235294342041016
-    Tree Height: 363
+    Tree Height: 421
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -69,11 +68,21 @@ Visualization Manager:
       Frame Timeout: 1
       Frames:
         All Enabled: false
+        DW0038:
+          Value: true
         DW1632:
+          Value: true
+        DW2D9C:
           Value: true
         DW43EB:
           Value: true
+        DW47FC:
+          Value: true
         DW4806:
+          Value: true
+        DW4814:
+          Value: true
+        DW4848:
           Value: true
         DW4984:
           Value: true
@@ -103,8 +112,6 @@ Visualization Manager:
           Value: true
         map:
           Value: true
-        myworld:
-          Value: true
         world:
           Value: true
       Marker Scale: 1
@@ -113,38 +120,47 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        myworld:
-          world:
-            DW1632:
-              {}
-            DW43EB:
-              {}
-            DW4806:
-              {}
-            DW4984:
-              {}
-            map:
-              kobuki_d/odom:
-                kobuki_d/base_footprint:
-                  kobuki_d/base_link:
-                    kobuki_d/base_scan:
-                      {}
-                    kobuki_d/caster_back_link:
-                      {}
-                    kobuki_d/caster_front_link:
-                      {}
-                    kobuki_d/cliff_sensor_front_link:
-                      {}
-                    kobuki_d/cliff_sensor_left_link:
-                      {}
-                    kobuki_d/cliff_sensor_right_link:
-                      {}
-                    kobuki_d/gyro_link:
-                      {}
-                    kobuki_d/wheel_left_link:
-                      {}
-                    kobuki_d/wheel_right_link:
-                      {}
+        world:
+          DW0038:
+            {}
+          DW1632:
+            {}
+          DW2D9C:
+            {}
+          DW43EB:
+            {}
+          DW47FC:
+            {}
+          DW4806:
+            {}
+          DW4814:
+            {}
+          DW4848:
+            {}
+          DW4984:
+            {}
+          map:
+            kobuki_d/odom:
+              kobuki_d/base_footprint:
+                kobuki_d/base_link:
+                  kobuki_d/base_scan:
+                    {}
+                  kobuki_d/caster_back_link:
+                    {}
+                  kobuki_d/caster_front_link:
+                    {}
+                  kobuki_d/cliff_sensor_front_link:
+                    {}
+                  kobuki_d/cliff_sensor_left_link:
+                    {}
+                  kobuki_d/cliff_sensor_right_link:
+                    {}
+                  kobuki_d/gyro_link:
+                    {}
+                  kobuki_d/wheel_left_link:
+                    {}
+                  kobuki_d/wheel_right_link:
+                    {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -193,6 +209,21 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Tag Pose (AMCL)
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic: /dwm1001_localization/tag_pose_gt
+      Unreliable: false
+      Value: true
+    - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
       Enabled: true
@@ -236,41 +267,41 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.0464959144592285
+      Distance: 5.182095527648926
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.11268851161003113
-        Y: 0.2712646722793579
-        Z: 0.22420981526374817
+        X: 3.3993794918060303
+        Y: 12.037534713745117
+        Z: 9.326977729797363
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9547957181930542
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.631763458251953
+      Yaw: 4.964931488037109
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: true
+    collapsed: false
   Height: 713
-  Hide Left Dock: true
-  Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001560000022efc0200000007fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003d0000022e000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000230fc0200000003fb0000001e0054006f006f006c002000500072006f0070006500720074006900650073000000003d000000c70000005c00fffffffb0000000a00560069006500770073000000010a00000163000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000749000000a9fc0100000002fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000000000007490000000000000000fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000051f00000039fc0100000002fb0000000800540069006d006501000000000000051f000002eb00fffffffb0000000800540069006d006501000000000000045000000000000000000000051f0000023000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd00000004000000000000015600000230fc0200000007fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000230000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000230fc0200000003fb0000001e0054006f006f006c002000500072006f0070006500720074006900650073010000003d000000c70000005c00fffffffb0000000a00560069006500770073010000010a00000163000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000749000000a9fc0100000002fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730000000000000007490000000000000000fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000051f00000039fc0100000002fb0000000800540069006d006501000000000000051f000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000002ae0000023000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
     collapsed: false
   Tool Properties:
-    collapsed: true
+    collapsed: false
   Views:
-    collapsed: true
+    collapsed: false
   Width: 1311
   X: 1975
   Y: 27
