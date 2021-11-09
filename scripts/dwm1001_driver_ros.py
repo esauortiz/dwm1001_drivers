@@ -188,7 +188,7 @@ if __name__ == "__main__":
         anchor_coord = network["anchor" + str(i) + "_coordinates"]
         anchor_id_list.append(anchor_id)
         anchor_coord_list.append(anchor_coord)
-        print(anchor_id)
+        print(anchor_coord)
 
     # Creating publishers
     pub_pose_with_cov = rospy.Publisher('~tag_pose_with_cov', PoseWithCovarianceStamped, queue_size=1)
