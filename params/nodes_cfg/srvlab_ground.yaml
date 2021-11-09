@@ -1,5 +1,5 @@
 world_frame_id: "world"
-fixed_anchors: [DW4848, DW0038, DW2D9C, DW009A]
+fixed_anchors: [DW4806, DW4814, DW4984, DW43EB]
 n_networks : 2
 network0: 
   network_id: "0x11A7"
