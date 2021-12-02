@@ -68,48 +68,6 @@ Visualization Manager:
       Frame Timeout: 1
       Frames:
         All Enabled: false
-        DW0038:
-          Value: true
-        DW1632:
-          Value: true
-        DW2D9C:
-          Value: true
-        DW43EB:
-          Value: true
-        DW47FC:
-          Value: true
-        DW4806:
-          Value: true
-        DW4814:
-          Value: true
-        DW4848:
-          Value: true
-        DW4984:
-          Value: true
-        kobuki_d/base_footprint:
-          Value: true
-        kobuki_d/base_link:
-          Value: true
-        kobuki_d/base_scan:
-          Value: true
-        kobuki_d/caster_back_link:
-          Value: true
-        kobuki_d/caster_front_link:
-          Value: true
-        kobuki_d/cliff_sensor_front_link:
-          Value: true
-        kobuki_d/cliff_sensor_left_link:
-          Value: true
-        kobuki_d/cliff_sensor_right_link:
-          Value: true
-        kobuki_d/gyro_link:
-          Value: true
-        kobuki_d/odom:
-          Value: true
-        kobuki_d/wheel_left_link:
-          Value: true
-        kobuki_d/wheel_right_link:
-          Value: true
         map:
           Value: true
         world:
@@ -121,46 +79,8 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          DW0038:
-            {}
-          DW1632:
-            {}
-          DW2D9C:
-            {}
-          DW43EB:
-            {}
-          DW47FC:
-            {}
-          DW4806:
-            {}
-          DW4814:
-            {}
-          DW4848:
-            {}
-          DW4984:
-            {}
           map:
-            kobuki_d/odom:
-              kobuki_d/base_footprint:
-                kobuki_d/base_link:
-                  kobuki_d/base_scan:
-                    {}
-                  kobuki_d/caster_back_link:
-                    {}
-                  kobuki_d/caster_front_link:
-                    {}
-                  kobuki_d/cliff_sensor_front_link:
-                    {}
-                  kobuki_d/cliff_sensor_left_link:
-                    {}
-                  kobuki_d/cliff_sensor_right_link:
-                    {}
-                  kobuki_d/gyro_link:
-                    {}
-                  kobuki_d/wheel_left_link:
-                    {}
-                  kobuki_d/wheel_right_link:
-                    {}
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -234,8 +154,8 @@ Visualization Manager:
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
       Name: RobotModel
-      Robot Description: kobuki_a/robot_description
-      TF Prefix: kobuki_a
+      Robot Description: kobuki_e/robot_description
+      TF Prefix: kobuki_e
       Update Interval: 0
       Value: true
       Visual Enabled: true
@@ -267,25 +187,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.182095527648926
+      Distance: 6.951606273651123
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.3993794918060303
-        Y: 12.037534713745117
-        Z: 9.326977729797363
+        X: -1.932513952255249
+        Y: 3.722773551940918
+        Z: 5.642010688781738
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.0397968292236328
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.964931488037109
+      Yaw: 2.4399290084838867
     Saved: ~
 Window Geometry:
   Displays:
