@@ -155,7 +155,9 @@ def main():
         if target_dwm_module in anchor_id_list_by_network[i]:
             network_id = network_id_list[i]    
     rtc.nis(network_id)
-    
+
+    rtc.quit()
+    rtc.initSerial(serial_port)    
     rtc.quit()
 
 if __name__ == "__main__":
