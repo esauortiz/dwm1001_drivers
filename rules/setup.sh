@@ -14,3 +14,4 @@ sudo cp DW4848.rules /etc/udev/rules.d
 sudo cp DW4984.rules /etc/udev/rules.d
 sudo cp dwm1001.rules /etc/udev/rules.d
 sudo udevadm control --reload-rules && udevadm trigger
+sudo usermod -a -G dialout $USER
