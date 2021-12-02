@@ -1,6 +1,6 @@
 <launch>
     <arg name="use_sim_time" default="False"/>
-    <arg name="nodes_cfg_label" default="wall"/>
+    <arg name="nodes_cfg_label" default="default"/>
     <arg name="std_acc" default="0.4"/>
     <arg name="std_rng" default="0.05"/>
     <arg name="dt" default="0.08"/>
