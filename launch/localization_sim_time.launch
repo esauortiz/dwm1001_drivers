@@ -1,17 +1,17 @@
 <launch>
     <arg name="use_sim_time" default="True"/>
-    <arg name="nodes_cfg_label" default="subterraneoB"/>
+    <arg name="nodes_cfg_label" default="campus_sport"/>
     <arg name="std_acc" default="0.4"/>
     <arg name="std_rng" default="0.05"/>
     <arg name="dt" default="0.08"/>
     <arg name="using_ekf" default="True"/>
-    <arg name="duration" default="110"/> <!-- Localization node duration in seconds, if 0 then duration until KeyboardInterrupt-->
+    <arg name="duration" default="210"/> <!-- Localization node duration in seconds, if 0 then duration until KeyboardInterrupt-->
     
     <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
-    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /media/esau/hdd_at_ubuntu/bag_files/subterraneo/zigzag/2_filtered.bag"/>
+    <node pkg="rosbag" type="play" name="player" output="log" args="--clock /media/esau/hdd_at_ubuntu/bag_files/campus_sport/campus_cross/1_filtered.bag"/>
 
-    <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="log">
+    <node name="dwm1001_localization" pkg="dwm1001_drivers" type="dwm1001_localization.py" output="screen">
         <param name="std_acc" value="$(arg std_acc)" />
         <param name="std_rng" value="$(arg std_rng)" />
         <param name="dt" value="$(arg dt)" />
