@@ -86,7 +86,7 @@ class LocationEngine(object):
         self.landmarks = anchor_poses
         # sub to optitrack robot pose
         self.optitrack_sub = OptitrackSubscriber("/optitrack/kobuki_c/pose")
-        self.odometry_sub = OdometrySubscriber("/kobuki_d/odom", world_frame_id)
+        self.odometry_sub = OdometrySubscriber("/kobuki_e/odom", world_frame_id)
 
         if ekf_kwargs['using_ekf']:
             initial_pose = np.array([1.95,22.85,0.0,0,0,0]) # manually from optitrack
@@ -166,7 +166,7 @@ class LocationEngine(object):
         for anchor_sub, anchor_pose in zip(self.anchor_subs_list, self.anchor_poses):
             # check is subs have received new anchor info
             # also check if anchor status is True (i.e. anchor found)
-            if anchor_sub.new_anchor_info == True and anchor_sub.anchor_info.status == True:
+            if anchor_sub.new_anchor_info == True and anchor_sub.anchor_info.status == True and anchor_sub.anchor_info.distance > 0.0:
                 # force anchor position as specified in cfg file
                 anchor_sub.anchor_info.position.x = anchor_pose[0]
                 anchor_sub.anchor_info.position.y = anchor_pose[1]
@@ -188,6 +188,7 @@ class LocationEngine(object):
             self.ekf.predict()
             self.ekf.update(ranges, niter = 100)
             tag_coord = self.ekf.x
+            self.tag_status = True
 
         if self.optitrack_sub.new_pose:
             x = self.optitrack_sub.pose.pose.position.x
@@ -215,9 +216,15 @@ class LocationEngine(object):
             self.optitrack_in_world.publish(self.odometry_sub.pose)
             self.odometry_sub.new_pose = False
 
-        if len(anchor_subs_updated) >= 4:
-            if self.ekf is None:
-                tag_coord = self.computeTagCoords(anchor_subs_updated)
+        if len(anchor_subs_updated) >= 4 and self.ekf is None:
+            tag_coord = self.computeTagCoords(anchor_subs_updated)
+            self.tag_status = True
+
+        if verbose and self.tag_status: 
+            print(str(len(anchor_subs_updated)) + ' anchor-tag distances have been received, computing tag coords ...')
+            print(tag_coord)
+
+        if self.tag_status == True:
             ps = PoseStamped()
             ps.header.stamp = rospy.get_rostime()
             ps.header.frame_id = self.world_frame_id
@@ -225,10 +232,7 @@ class LocationEngine(object):
             ps.pose.position.y = tag_coord[1]
             ps.pose.position.z = tag_coord[2]
             self.estimated_coord_pub.publish(ps)
-
-            if verbose: 
-                print(str(len(anchor_subs_updated)) + ' anchor-tag distances have been received, computing tag coords ...')
-                print(tag_coord)
+            self.tag_status = False
                 
         # discard msgs if they have not arrived during one rate.sleep()
         #for anchor_sub in self.anchor_subs_list: anchor_sub.new_anchor_info = False
@@ -267,7 +271,7 @@ if __name__ == '__main__':
             i += 1
     # location engine object
     location_engine = LocationEngine(world_frame_id, tag_id_list, n_anchors_list, anchor_poses, ekf_kwargs)
-    #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/srvlab/landmarks.txt', np.array(anchor_poses))
+    #np.savetxt('/media/esau/hdd_at_ubuntu/bag_files/campus_sport/landmarks.txt', np.array(anchor_poses))
     
     # if 0 then duration until KeyboardInterrupt
     if int(rospy.get_param('~duration')) != 0:
