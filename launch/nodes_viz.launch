@@ -12,9 +12,10 @@
   <!-- World to map TF --> 
   <!-- lab 1.0 3.0 0.0 0.0 0.0 0.0 -->
   <!-- subterraneoA 1.95 22.85 0.0 0.0 0.0 1.57079632679 --> 
-  <!-- campus sport 0.0 4.5 0.0 0.0 0.0 0.0 -->
+  <!-- campus sport 0.0 4.5 0.0 0.0 0.0 0.0 (old)-->
+  <!-- campus sport 1.55 4.5 0.0 0.0 0.0 0.0 (new)-->
   <!---->
-  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="0.0 4.5 0.0 0.0 0.0 0.0 /world /map 1"/>
+  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="1.55 4.5 0.0 0.0 0.0 0.0 /world /map 1"/>
 
   <!-- rviz w/ configuration-->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find dwm1001_drivers)/rviz/nodes_viz.rviz" />
