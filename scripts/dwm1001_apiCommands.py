@@ -148,7 +148,7 @@ class DWM1001_UART_API:
                         return ['']
 
                 array_data = [x.strip() for x in serial_read_line.strip().split(' ')]
-                if verbose: print(array_data)
+                if verbose: print(serial_read_line)
                 if command in array_data: return ['']
                 return array_data
 
