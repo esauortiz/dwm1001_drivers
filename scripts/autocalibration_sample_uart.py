@@ -26,7 +26,7 @@ class ReadyToCalibrate(DWM1001_UART_API):
     def __init__(self, verbose = False):
         self.verbose = verbose
 
-    def getAnchorsData(self, is_location_engine_enabled = False):
+    def getAnchorsData(self, is_location_engine_enabled = False, verbose = False):
         """ Read and formats serial data
         Parameters
         ----------
@@ -35,7 +35,7 @@ class ReadyToCalibrate(DWM1001_UART_API):
         """
         # Show distances to ranging anchors and the position if location engine is enabled
         ranging_request = DWMRangingReq(is_location_engine_enabled)
-        data = self.getDataFromSerial(ranging_request)
+        data = self.getDataFromSerial(ranging_request, verbose)
         if data == []:
             return None
         if is_location_engine_enabled == True:
