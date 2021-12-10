@@ -47,7 +47,7 @@ class OptitrackSubscriber(object):
 class OdometrySubscriber(object):
     def callback(self, odometry):
         self.new_pose = True
-        self.pose.header.stamp = rospy.get_rostime()
+        self.pose.header.stamp = odometry.header.stamp
         self.pose.header.seq = odometry.header.seq
         self.pose.header.frame_id = odometry.header.frame_id
         self.pose.pose.position.x = odometry.pose.pose.position.x
