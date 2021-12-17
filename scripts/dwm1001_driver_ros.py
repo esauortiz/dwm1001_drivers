@@ -129,7 +129,7 @@ class ReadyToLocalize(DWM1001_UART_API):
                         dr.status = True
                         self.range_error_counts[self_idx] = 0
 
-                        x, y, z = [float(coord) for coord in self.anchor_coord_list[idx]] # forcing coords from cfg file
+                        x, y, z = [float(coord) for coord in self.anchor_coord_list[self.anchor_id_list.index(dr.id)]] # forcing coords from cfg file
                         dr.position.x = x
                         dr.position.y = y
                         dr.position.z = z
