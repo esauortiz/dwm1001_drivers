@@ -63,8 +63,10 @@ def readYaml(file):
             print(exc)
 
 def main():
+    # initiator enabler
+    initiator_enabler = int(sys.argv[3])
     # target module from which retrieve ranges
-    target_dwm_module = sys.argv[3]
+    target_dwm_module = sys.argv[4]
     # load nodes configuration label
     try: nodes_configuration_label = sys.argv[2]
     except: nodes_configuration_label = 'default'
@@ -140,7 +142,7 @@ def main():
     np.savetxt(target_dwm_module + '_ranging_data.txt', ranging_data)
     
     # set module as anchor
-    initiator = 0   # initiator enabled
+    initiator = initiator_enabler   # initiator enabled
     bridge_en = 0   # bridge mode disabled
     enc_en = 0      # encryption disabled
     leds = 1        # leds disabled
