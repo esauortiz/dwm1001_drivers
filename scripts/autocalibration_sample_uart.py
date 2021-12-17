@@ -6,10 +6,10 @@
               using UART API from https://www.decawave.com/dwm1001/api/
 @author: Esau Ortiz
 @date: october 2021
-@usage: python autocalibration_sample_uart.py <n_samples> <nodes_configuration_label> <n_samples>
+@usage: python autocalibration_sample_uart.py <n_samples> <nodes_cfg_label> <n_samples>
 
         # where 
-                <nodes_configuration_label> is a yaml file which includes nets, 
+                <nodes_cfg_label> is a yaml file which includes nets, 
                 tag ids, anchor ids and anchor coords
                 <n_samples> samples to save when retrieving ranges
                 <module> is the module id with DW1234 format
@@ -68,8 +68,8 @@ def main():
     # target module from which retrieve ranges
     target_dwm_module = sys.argv[4]
     # load nodes configuration label
-    try: nodes_configuration_label = sys.argv[2]
-    except: nodes_configuration_label = 'default'
+    try: nodes_cfg_label = sys.argv[2]
+    except: nodes_cfg_label = 'default'
     # load nodes configuration label
     try: n_samples = int(sys.argv[1])
     except: n_samples = 10
@@ -77,7 +77,7 @@ def main():
     # load anchors cfg
     current_path = Path(__file__).parent.resolve()
     dwm1001_drivers_path = str(current_path.parent)
-    nodes_cfg = readYaml(dwm1001_drivers_path + "/params/nodes_cfg/" + nodes_configuration_label + ".yaml")
+    nodes_cfg = readYaml(dwm1001_drivers_path + "/params/nodes_cfg/" + nodes_cfg_label + ".yaml")
 
     # set some node variables
     n_networks = nodes_cfg['n_networks']
