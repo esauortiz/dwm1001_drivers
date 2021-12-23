@@ -1,4 +1,3 @@
 # set the udev rule , make the device_port be fixed by dwm1001
 #
-KERNEL=="tty*", ATTRS{idVendor}=="1366", ATTRS{idProduct}=="0105", ATTRS{serial}=="000760132035", SYMLINK+="DW02D6"
-
+KERNEL=="tty*", ATTRS{idVendor}=="1366", ATTRS{idProduct}=="0105", ATTRS{serial}=="000760132035", SYMLINK+="DW02D6", MODE="0666"
