@@ -9,10 +9,11 @@
 @usage: python autocalibration_sample_uart.py <n_samples> <nodes_cfg_label> <n_samples>
 
         # where 
+                <n_samples> samples to save when retrieving ranges
                 <nodes_cfg_label> is a yaml file which includes nets, 
                 tag ids, anchor ids and anchor coords
-                <n_samples> samples to save when retrieving ranges
-                <module> is the module id with DW1234 format
+                <initiator_enable> boolean (0 or 1) to enable or not initiator state
+                <dwm_module> is the module id with DW1234 format
 """
 
 from dwm1001_apiCommands import DWM1001_UART_API
@@ -30,8 +31,12 @@ class ReadyToCalibrate(DWM1001_UART_API):
         """ Read and formats serial data
         Parameters
         ----------
+        is_location_engine_enabled: boolean
+        verbose: boolean
         Returns
         ----------
+        ranging_data: dicctionary
+            keys are anchord_ids and values are anchor-tag ranges
         """
         # Show distances to ranging anchors and the position if location engine is enabled
         ranging_request = DWMRangingReq(is_location_engine_enabled)
@@ -66,7 +71,7 @@ def main():
     # initiator enabler
     initiator_enabler = int(sys.argv[3])
     # target module from which retrieve ranges
-    target_dwm_module = sys.argv[4]
+    dwm_module = sys.argv[4]
     # load nodes configuration label
     try: nodes_cfg_label = sys.argv[2]
     except: nodes_cfg_label = 'default'
@@ -97,7 +102,7 @@ def main():
     ranging_data = -np.ones((n_samples, n_total_anchors), dtype = float)
 
     # Read parameters
-    serial_port = '/dev/' + target_dwm_module
+    serial_port = '/dev/' + dwm_module
 
     # Starting communication with DWM1001 module
     rtc = ReadyToCalibrate()
@@ -139,7 +144,7 @@ def main():
                     ranging_data[row_idx, col_idx] = location_data[anchor]
             time.sleep(0.1)
     
-    np.savetxt(target_dwm_module + '_ranging_data.txt', ranging_data)
+    np.savetxt(dwm_module + '_ranging_data.txt', ranging_data)
     
     # set module as anchor
     initiator = initiator_enabler   # initiator enabled
@@ -154,10 +159,11 @@ def main():
     # set module network
     network_id = None
     for i in range(n_networks):
-        if target_dwm_module in anchor_id_list_by_network[i]:
+        if dwm_module in anchor_id_list_by_network[i]:
             network_id = network_id_list[i]    
     rtc.nis(network_id)
 
+    # restart to apply changes
     rtc.quit()
     rtc.initSerial(serial_port)    
     rtc.quit()
