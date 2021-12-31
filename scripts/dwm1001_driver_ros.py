@@ -18,9 +18,6 @@ from dwm1001_apiCommands import DWMRangingReq
 class ReadyToLocalize(DWM1001_UART_API):
 
     def __init__(self, anchor_id_list, anchor_coord_list, world_frame_id, visualize_anchors = False):
-        """
-        Initialize serial port
-        """
         self.anchor_id_list = anchor_id_list
         self.anchor_coord_list = anchor_coord_list
         self.range_error_counts = [0 for i in range(len(self.anchor_id_list))]
@@ -39,11 +36,18 @@ class ReadyToLocalize(DWM1001_UART_API):
         self.topics = {}
         
     def getRangingData(self, verbose = False):
-        """ Read and formats serial data
+        """ Read and formats serial data 
+            (i.e. ranges between tag and anchors in the same network)
         Parameters
         ----------
         Returns
         ----------
+        anchor_poses: list
+            list of anchor poses, each element has the following
+            format [anchor_id, anchor_pose, anchor_distance]
+        tag_pose: list
+            list of [x, y, z] if localition engine is enabled both
+            in the module and /params/tag_operation_mode.yaml
         """
         # Show distances to ranging anchors and the position if location engine is enabled
         ranging_request = DWMRangingReq(self.is_location_engine_enabled)
@@ -72,14 +76,14 @@ class ReadyToLocalize(DWM1001_UART_API):
 
     def loop(self, verbose = False) :
         """
-        Read and publish data
+        Read and publish ranging data
         Parameters
         ----------
         verbose: bool
         Returns
         ----------
         """
-        # read anchor data (always) and estimated tag pose (optional)
+        # read anchor data (always) and estimated tag pose (optional, done if location engine is enabled)
         anchor_data_list, tag_pose = self.getRangingData(verbose)
         anchor_id_list = []
         anchor_coord_list = []

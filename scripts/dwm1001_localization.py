@@ -22,6 +22,7 @@ class AnchorSubscriber(object):
     def callback(self, anchor_info):
         self.anchor_info = anchor_info
         self.new_anchor_info = True
+
     def __init__(self, idx, tag_id):
         self.anchor_info = None
         self.new_anchor_info = False
@@ -30,6 +31,10 @@ class AnchorSubscriber(object):
 class OptitrackSubscriber(object):
     def callback(self, pose):
         self.new_pose = True
+        # changing stamp in order to transformPose to work
+        # seems a bad practice a it should be changed for a 
+        # better implementation, maybe a tranformation with a 
+        # static TF
         old_nsecs = pose.header.stamp.nsecs
         pose.header.stamp.nsecs -= 500000000
         try:
@@ -37,7 +42,9 @@ class OptitrackSubscriber(object):
         except:
             self.new_pose = False
         pose.header.stamp.nsecs = old_nsecs
+
         self.pose = pose
+
     def __init__(self, topic):
         self.pose = None
         self.new_pose = False
@@ -96,6 +103,17 @@ class LocationEngine(object):
             self.ekf = None
 
     def compute_ranges(self, tag_pose, anchors_poses):
+        """
+        Given the true tag_pose (based on Optitrack or AMCL) and true anchors_poses
+        a true ranges could be computed if needed
+        Parameters
+        ----------
+        tag_pose: (3,) array
+        anchors_poses: (N, 3) array
+        Returns
+        ----------
+        ranges: (N,) array
+        """
         ranges = []
         for anchor_pose in anchors_poses:
             ranges.append(np.linalg.norm((np.array(tag_pose),np.array(anchor_pose))))
@@ -115,8 +133,8 @@ class LocationEngine(object):
         tag_coord: (3,) array
             (x, y, z) tag coordinates
         """
+        # build anchord_coord and anchors_distances arrays
         n_anchor_subs_updated = len(anchor_subs_updated)
-        # (x,y,z) updated anchors coordinates array
         anchors_coord = np.empty((n_anchor_subs_updated, 3))
         anchors_distances = np.empty((n_anchor_subs_updated,))
         for i, anchor_sub in zip(range(n_anchor_subs_updated), anchor_subs_updated): 
@@ -128,7 +146,7 @@ class LocationEngine(object):
             anchors_distances[i] = d
 
         """
-        # step by step 
+        # step by step solution
         N = n_anchor_subs_updated - 1
         A = np.empty((N, 3))
         for i in range(N):
@@ -183,13 +201,14 @@ class LocationEngine(object):
             else:
                 ranges.append(-1.0)
 
+        # tag_coord computed through ekf
         if self.ekf is not None:
-            # tag_coord computed through ekf
             self.ekf.predict()
             self.ekf.update(ranges, niter = 100)
             tag_coord = self.ekf.x
             self.tag_status = True
 
+        # save Optitrack reference if needed
         if self.optitrack_sub.new_pose:
             x = self.optitrack_sub.pose.pose.position.x
             y = self.optitrack_sub.pose.pose.position.y
@@ -203,6 +222,7 @@ class LocationEngine(object):
             self.optitrack_in_world.publish(self.optitrack_sub.pose)
             self.optitrack_sub.new_pose = False
 
+        # save Optitrack AMCL if needed
         if self.odometry_sub.new_pose:
             x = self.odometry_sub.pose.pose.position.x
             y = self.odometry_sub.pose.pose.position.y
@@ -216,6 +236,7 @@ class LocationEngine(object):
             self.optitrack_in_world.publish(self.odometry_sub.pose)
             self.odometry_sub.new_pose = False
 
+        # tag_coord computed through LS procedure
         if len(anchor_subs_updated) >= 4 and self.ekf is None:
             tag_coord = self.computeTagCoords(anchor_subs_updated)
             self.tag_status = True
@@ -224,6 +245,7 @@ class LocationEngine(object):
             print(str(len(anchor_subs_updated)) + ' anchor-tag distances have been received, computing tag coords ...')
             print(tag_coord)
 
+        # publish tag pose
         if self.tag_status == True:
             ps = PoseStamped()
             ps.header.stamp = rospy.get_rostime()
