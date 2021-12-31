@@ -1,3 +1,8 @@
+<!-- 
+    Launch  · rosbag record with localization experiment
+            · dwm1001_localization node configuring EKF parameters
+-->
+
 <launch>
     <arg name="use_sim_time" default="True"/>
     <arg name="nodes_cfg_label" default="campus_sport"/>

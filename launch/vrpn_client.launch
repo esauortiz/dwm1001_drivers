@@ -1,14 +1,16 @@
-<?xml version="1.0"?>
+<!--
+  Launch  · DWM1001 nodes visualization
+          · TF between /world and /map
+          · Map server
+ -->
 
 <launch>
-
-  <!--param name="use_sim_time" value="true"/-->
-
   <arg name="server" default="192.168.0.8"/>
 
   <!-- World to map TF --> 
   <node pkg="tf" type="static_transform_publisher" name="optitrack_to_world" args="4.11 2.075 0.0 -1.5707 0.0 0.0 /world /optitrack 1"/>
 
+  <!-- VRPN client --> 
   <node pkg="vrpn_client_ros" type="vrpn_client_node" name="optitrack" output="screen">
     <rosparam subst_value="true">
       server: $(arg server)
@@ -27,12 +29,4 @@
       #- kobuki_c
     </rosparam>
   </node>
-
-  <!--
-  <node pkg="srv_odom_utils" type="poseToTwist_node" name="mussolTwistGT" output="screen" respawn="true">
-    <param name="filter_type" value="0"/>
-    <param name="filter_size" value="10"/>
-    <remap from="~pose" to="/optitrack/Mussol/pose"/>
-  </node>
-  -->
 </launch>

@@ -1,12 +1,15 @@
 <!--
-  DWM1001 nodes visualization launcher
+  Launch  · DWM1001 nodes visualization
+          · TF between /world and /map
+          · Map server
  -->
+
 <launch>
 
   <arg name="use_sim_time" default="false"/>
   <arg name="map_name" default="srvlab"/>
   <arg name="map_file" default="$(find dwm1001_drivers)/maps/$(arg map_name).yaml"/>
-  
+
   <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
   <!-- World to map TF --> 
@@ -16,11 +19,11 @@
   <!-- campus sport 1.55 4.5 0.0 0.0 0.0 0.0 (new)-->
   <!-- srvlab_ground 2 0.0 0.0 0.0 0.0 0.0 0.0 -->
   <!---->
-  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="0.0 0.0 0.0 0.0 0.0 0.0 world /map 1"/>
+  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="0.0 0.0 0.0 0.0 0.0 0.0 /world /map 1"/>
 
   <!-- rviz w/ configuration-->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find dwm1001_drivers)/rviz/nodes_viz.rviz" />
-  
+
   <!-- map publisher -->
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
     <param name="frame_id" value="/map" />
