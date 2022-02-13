@@ -1,3 +1,6 @@
 [submodule "dwm_ble_cfg"]
 	path = dwm_ble_cfg
 	url = https://github.com/esauortiz/dwm_ble_cfg.git
+[submodule "uwb_autocalibration"]
+	path = uwb_autocalibration
+	url = https://github.com/esauortiz/uwb_autocalibration
