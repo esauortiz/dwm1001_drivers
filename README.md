@@ -35,7 +35,7 @@ roslaunch dwm1001_drivers nodes_viz.launch
 
 ## Examples of estimated trajectories
 
-The following figures represent the estimated trajectory (selecting EKF option) and the ground truth trajectory for reference. 
+The following figures represent the estimated trajectory selecting EKF option (green) and the ground truth (red) trajectory for reference. 
 
 * Trajectories in the xy plane
 
