@@ -33,7 +33,7 @@ Lastly, RVIZ configuration file is provided to visualize both Least Squares-base
 roslaunch dwm1001_drivers nodes_viz.launch
 ```
 
-## Example trajectories
+## Examples of estimated trajectories
 
 The following figures represent the estimated trajectory (selecting EKF option) and the ground truth trajectory for reference. 
 
