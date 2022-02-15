@@ -38,9 +38,11 @@ roslaunch dwm1001_drivers nodes_viz.launch
 The following figures represent the estimated trajectory (selecting EKF option) and the ground truth trajectory for reference. 
 
 * Trajectories in the xy plane
+
 ![Cross trajectory](https://github.com/esauortiz/dwm1001_drivers/blob/main/ekf_trajectories/xy_cross.png)
 
 ![Spiral trajectory](https://github.com/esauortiz/dwm1001_drivers/blob/main/ekf_trajectories/xy_spiral.png)
 
 * Trajectories in the zx plane
-![Spiral trajectory](https://github.com/esauortiz/dwm1001_drivers/blob/main/ekf_trajectories/zx_cross.png)
+
+![Spiral trajectory](https://github.com/esauortiz/dwm1001_drivers/blob/main/ekf_trajectories/zx_spiral.png)
